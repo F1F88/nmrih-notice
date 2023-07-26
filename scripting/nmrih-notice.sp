@@ -1,6 +1,17 @@
 #pragma newdecls required
 #pragma semicolon 1
 
+#define PLUGIN_VERSION	   "1.0.0"
+
+public Plugin myinfo =
+{
+    name        = "Player highlight",
+    author      = "F1F88",
+    description = "Alert the player when something happens in the game",
+    version     = PLUGIN_VERSION,
+    url         = "https://github.com/F1F88/nmrih-notice"
+};
+
 #include <sourcemod>
 #include <sdktools>
 #include <multicolors>
@@ -37,7 +48,6 @@ public void OnPluginStart()
     (convar = CreateConVar("sm_notice_infected",        "1", "在聊天框提示玩家感染")).AddChangeHook(On_ConVar_Change);
     cv_notice_infected = convar.BoolValue;
 
-
     (convar = CreateConVar("sm_notice_ff",              "1", "在聊天框提示队友攻击")).AddChangeHook(On_ConVar_Change);
     cv_notice_friend_fire = convar.BoolValue;
     (convar = CreateConVar("sm_notice_fk",              "1", "在聊天框提示队友击杀")).AddChangeHook(On_ConVar_Change);
@@ -50,6 +60,7 @@ public void OnPluginStart()
     (convar = CreateConVar("sm_notice_keycode",         "1", "键盘输入事件提示类型 | 0: 关闭 | 1: 显示输入的密码 | ")).AddChangeHook(On_ConVar_Change);
     cv_notice_keycode = convar.BoolValue;
 
+    CreateConVar("sm_nmrih_notice_version",             PLUGIN_VERSION);
 
     AutoExecConfig(true, "nmrih-notice");
 
