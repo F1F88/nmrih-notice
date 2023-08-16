@@ -1,11 +1,16 @@
 # NMRIH Notice
 
-这个插件能够提醒游戏内的玩家，是否有人流血、感染、被队友攻击，以及输入密码信息
+## Document [English](./readme.md) | [中文](./readme-chineses.md)
 
-灵感来源（相当于升级版）: https://forums.alliedmods.net/showthread.php?p=2335718
+This plugin can remind players in the game whether there is anyone bleeding, infected, attacked by teammates, and the password entered
 
+At the same time, it supports players to customize which message reminders to receive (depending on the! Settings of clientprefs)
+
+Inspiration source (this project is equivalent to an upgraded version): https://forums.alliedmods.net/showthread.php?p=2335718
 
 ## Requirements
+
+- clientprefs extensions
 
 - [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) or higher
 
