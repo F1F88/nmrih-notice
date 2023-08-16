@@ -1,6 +1,6 @@
 # NMRIH Notice
 
-## 文档 [中文](./readme-Chineses.md) | [English](./readme.md)
+**文档 :** [中文](./readme-Chineses.md) | [English](./readme.md)
 
 这个插件能够提醒游戏内的玩家，是否有人流血、感染、被队友攻击，以及输入的密码等提示信息
 

@@ -1,6 +1,6 @@
 # NMRIH Notice
 
-## Document [English](./readme.md) | [中文](./readme-chineses.md)
+**Document :** [English](./readme.md) | [中文](./readme-chineses.md)
 
 This plugin can remind players in the game whether there is anyone bleeding, infected, attacked by teammates, and the password entered
 
