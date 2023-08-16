@@ -68,4 +68,46 @@
 		"en"			"{greren}[PASSWROD] {gray}{1}{default} Enter the wrong code {orange}{2}"
 		"zho"			"{green}[密码] {gray}{1}{default} 輸入了錯誤的密碼 {orange}{2}"
 	}
+
+	"Notifice_PrefsMenu_Title"
+	{
+		"chi"			"[NMRIH Notice]    By F1F88\n \n- 偏好设置\n "
+		"en"			"[NMRIH Notice]    By F1F88\n \n- Preferences\n "
+		"zho"			"[NMRIH Notice]    By F1F88\n \n- 偏好設定\n "
+	}
+
+	"Notifice_PrefsMenu_Item_Bleeding"
+	{
+		"chi"			"是否显示玩家流血提示"
+		"en"			"Whether to display player bleeding tips"
+		"zho"			"是否顯示玩家流血提示"
+	}
+
+	"Notifice_PrefsMenu_Item_Infected"
+	{
+		"chi"			"是否显示玩家感染提示"
+		"en"			"Whether to display player infection tips"
+		"zho"			"是否顯示玩家感染提示"
+	}
+
+	"Notifice_PrefsMenu_Item_ff"
+	{
+		"chi"			"是否显示队友误伤提示"
+		"en"			"Whether to display teammate friendly injury tips"
+		"zho"			"是否顯示隊友誤傷提示"
+	}
+
+	"Notifice_PrefsMenu_Item_fk"
+	{
+		"chi"			"是否显示队友击杀提示"
+		"en"			"Whether to display teammate friendly kill tips"
+		"zho"			"是否顯示隊友击杀提示"
+	}
+
+	"Notifice_PrefsMenu_Item_passwd"
+	{
+		"chi"			"是否显示玩家输入密码提示"
+		"en"			"Whether to show the player input password tips"
+		"zho"			"是否顯示玩家輸入密碼提示"
+	}
 }
