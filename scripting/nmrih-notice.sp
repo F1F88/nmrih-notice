@@ -8,7 +8,7 @@
 #define CLIENT_PREFS_BIT_SHOW_INFECTED      (1 << 1)
 #define CLIENT_PREFS_BIT_SHOW_FF            (1 << 2)
 #define CLIENT_PREFS_BIT_SHOW_FK            (1 << 3)
-#define CLIENT_PREFS_BIT_SHOW_passwd        (1 << 4)
+#define CLIENT_PREFS_BIT_SHOW_PASSWD        (1 << 4)
 #define CLIENT_PREFS_BIT_DEFAULT            (1 << 5) - 1
 
 public Plugin myinfo =
@@ -235,7 +235,7 @@ public Action Timer_check_player_status(Handle timer, any data)
                 g_client_data[client].already_noticed_infected = true;
                 for(int i=1; i<=MaxClients; ++i)
                 {
-                    if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_BLEEDING )
+                    if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_INFECTED )
                     {
                         CPrintToChat(i, "%t", "Notifice_Infection", client);
                     }
@@ -271,7 +271,7 @@ public void Event_PlayerHurt(Event hEvent, char[] szEventName, bool bDontBroadca
 
     for(int i=1; i<=MaxClients; ++i)
     {
-        if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_BLEEDING )
+        if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_FF )
         {
             CPrintToChat(i, "%t", "Notifice_Attacked", attacker, victim);
         }
@@ -300,9 +300,9 @@ public void Event_PlayerDeath(Event hEvent, char[] szEventName, bool bDontBroadc
 
     for(int i=1; i<=MaxClients; ++i)
     {
-        if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_passwd )
+        if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_FK )
         {
-            CPrintToChat(i, "%t","Notifice_Kill", attacker_client, victim_client);
+            CPrintToChat(i, "%t", "Notifice_Kill", attacker_client, victim_client);
         }
     }
 
@@ -322,12 +322,13 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 
     event.GetString("code", enter_code, 16);
     GetEntPropString(keypad, Prop_Data, "m_pszCode", correct_code, 16);
+    // PrintToServer("Password:| %s |", correct_code);
 
     if( strcmp(enter_code, correct_code) == 0 )
     {
         for(int i=1; i<=MaxClients; ++i)
         {
-            if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_passwd )
+            if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_PASSWD )
             {
                 CPrintToChat(i, "%t","Notifice_InputCorrectCode", client, enter_code);
             }
@@ -337,7 +338,7 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
     {
         for(int i=1; i<=MaxClients; ++i)
         {
-            if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_passwd )
+            if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_PASSWD )
             {
                 CPrintToChat(i, "%t","Notifice_InputIncorrectCode", client, enter_code);
             }
@@ -389,9 +390,9 @@ void ShowCookiesMenu(int client, int at=0)
     IntToString(CLIENT_PREFS_BIT_SHOW_FK, item_info, sizeof(item_info));
     menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
 
-    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_passwd ? true : false;
+    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_PASSWD ? true : false;
     FormatEx(item_display, sizeof(item_display), "%T - %T", "Notifice_PrefsMenu_Item_passwd", client, item_flag ? "Yes" : "No", client);
-    IntToString(CLIENT_PREFS_BIT_SHOW_passwd, item_info, sizeof(item_info));
+    IntToString(CLIENT_PREFS_BIT_SHOW_PASSWD, item_info, sizeof(item_info));
     menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
 
     menu_cookie.DisplayAt(client, at, 30);
