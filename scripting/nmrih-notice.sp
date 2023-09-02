@@ -212,7 +212,7 @@ public Action Timer_check_player_status(Handle timer, any data)
     {
         if( ! IsClientInGame(client) || ! IsPlayerAlive(client) )
         {
-            return Plugin_Continue;
+            continue ;
         }
 
         if( GetEntData(client, g_offset_bleedingOut) )
