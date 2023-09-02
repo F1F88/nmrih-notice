@@ -1,7 +1,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION                      "1.1.1"
+#define PLUGIN_VERSION                      "1.1.2"
 #undef  MAXPLAYERS
 #define MAXPLAYERS                          9
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
@@ -212,7 +212,7 @@ public Action Timer_check_player_status(Handle timer, any data)
     {
         if( ! IsClientInGame(client) || ! IsPlayerAlive(client) )
         {
-            return Plugin_Continue;
+            continue ;
         }
 
         if( GetEntData(client, g_offset_bleedingOut) )
