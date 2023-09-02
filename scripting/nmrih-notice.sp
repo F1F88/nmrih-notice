@@ -1,7 +1,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION                      "1.1.0"
+#define PLUGIN_VERSION                      "1.1.1"
 #undef  MAXPLAYERS
 #define MAXPLAYERS                          9
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
@@ -29,10 +29,13 @@ public Plugin myinfo =
 #include <clientprefs>
 #define REQUIRE_EXTENSIONS
 
-enum struct client_data {
+enum struct client_data
+{
     bool already_noticed_bleeding;
     bool already_noticed_infected;
 }
+
+int             g_offset_bleedingOut;
 
 bool             cv_notice_bleeding
                 , cv_notice_infected
@@ -57,6 +60,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     MarkNativeAsOptional("Cookie.Set");
     MarkNativeAsOptional("Cookie.SetInt");
     MarkNativeAsOptional("SetCookieMenuItem");
+
+    if( (g_offset_bleedingOut = FindSendPropInfo("CNMRiH_Player", "_bleedingOut")) <= 0 )
+    {
+        FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::_bleedingOut'!");
+        return APLRes_Failure;
+    }
     return APLRes_Success;
 }
 
@@ -115,7 +124,7 @@ public void On_ConVar_Change(ConVar convar, const char[] oldValue, const char[] 
 {
     if ( convar == INVALID_HANDLE )
     {
-        return;
+        return ;
     }
     char convar_Name[64];
     convar.GetName(convar_Name, 64);
@@ -206,7 +215,7 @@ public Action Timer_check_player_status(Handle timer, any data)
             return Plugin_Continue;
         }
 
-        if( GetEntProp(client, Prop_Send, "_bleedingOut") == 1 )
+        if( GetEntData(client, g_offset_bleedingOut) )
         {
             if( cv_notice_bleeding && ! g_client_data[client].already_noticed_bleeding )
             {
@@ -346,7 +355,6 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
     }
 }
 
-
 public void OnClientPutInServer(int client)
 {
     g_clientPrefs_value[client] = g_clientPrefs_cookie.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
@@ -356,6 +364,7 @@ public void OnClientDisconnect(int client)
 {
     g_clientPrefs_value[client] = 0;
 }
+
 void CustomCookieMenu(int client, CookieMenuAction action, any info, char[] buffer, int maxlen)
 {
     ShowCookiesMenu(client, 0);
