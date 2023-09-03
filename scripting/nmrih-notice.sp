@@ -1,7 +1,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define PLUGIN_VERSION                      "1.1.2"
+#define PLUGIN_VERSION                      "1.1.3"
 #undef  MAXPLAYERS
 #define MAXPLAYERS                          9
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
@@ -215,7 +215,7 @@ public Action Timer_check_player_status(Handle timer, any data)
             continue ;
         }
 
-        if( GetEntData(client, g_offset_bleedingOut) )
+        if( GetEntData(client, g_offset_bleedingOut, 1) )
         {
             if( cv_notice_bleeding && ! g_client_data[client].already_noticed_bleeding )
             {
