@@ -1,11 +1,22 @@
 #pragma newdecls required
 #pragma semicolon 1
 
+#undef  MAXPLAYERS
+#define MAXPLAYERS                          9
+
+#include <sourcemod>
+#include <sdktools>
+
+#undef REQUIRE_EXTENSIONS
+#include <clientprefs>
+#define REQUIRE_EXTENSIONS
+
+#include <multicolors>
+#include <vscript_proxy>
+
 #define PLUGIN_VERSION                      "1.1.4"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
 
-#undef  MAXPLAYERS
-#define MAXPLAYERS                          9
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
 #define CLIENT_PREFS_BIT_SHOW_INFECTED      (1 << 1)
 #define CLIENT_PREFS_BIT_SHOW_FF            (1 << 2)
@@ -21,15 +32,6 @@ public Plugin myinfo =
     version     = PLUGIN_VERSION,
     url         = "https://github.com/F1F88/nmrih-notice"
 };
-
-#include <sourcemod>
-#include <sdktools>
-#include <multicolors>
-#include <vscript_proxy>
-
-#undef REQUIRE_EXTENSIONS
-#include <clientprefs>
-#define REQUIRE_EXTENSIONS
 
 enum struct client_data
 {
