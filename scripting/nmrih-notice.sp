@@ -14,7 +14,7 @@
 #include <multicolors>
 #include <vscript_proxy>
 
-#define PLUGIN_VERSION                      "1.1.4"
+#define PLUGIN_VERSION                      "1.1.5"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
 
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
@@ -39,7 +39,9 @@ enum struct client_data
     bool already_noticed_infected;
 }
 
-int             g_offset_bleedingOut;
+int             g_offset_bleedingOut
+                , g_offset_m_flInfectionTimet
+                , g_offset_m_flInfectionDeathTime;
 
 bool             cv_notice_bleeding
                 , cv_notice_infected
@@ -68,6 +70,18 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     if( (g_offset_bleedingOut = FindSendPropInfo("CNMRiH_Player", "_bleedingOut")) <= 0 )
     {
         FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::_bleedingOut'!");
+        return APLRes_Failure;
+    }
+
+    if( (g_offset_m_flInfectionTimet = FindSendPropInfo("CNMRiH_Player", "m_flInfectionTime")) <= 0 )
+    {
+        FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::m_flInfectionTime'!");
+        return APLRes_Failure;
+    }
+
+    if( (g_offset_m_flInfectionDeathTime = FindSendPropInfo("CNMRiH_Player", "m_flInfectionDeathTime")) <= 0 )
+    {
+        FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::m_flInfectionDeathTime'!");
         return APLRes_Failure;
     }
     return APLRes_Success;
@@ -219,7 +233,7 @@ public Action Timer_check_player_status(Handle timer, any data)
             continue ;
         }
 
-        if( GetEntData(client, g_offset_bleedingOut, 1) )
+        if( IsBleedingOut(client) )
         {
             if( cv_notice_bleeding && ! g_client_data[client].already_noticed_bleeding )
             {
@@ -241,7 +255,7 @@ public Action Timer_check_player_status(Handle timer, any data)
             }
         }
 
-        if( RunEntVScriptBool(client, "IsInfected()") == true )
+        if( IsInfected(client) )
         {
             if( cv_notice_infected && ! g_client_data[client].already_noticed_infected )
             {
@@ -439,6 +453,16 @@ int MenuHandler_Cookies(Menu menu, MenuAction action, int param1, int param2)
         }
     }
     return 0;
+}
+
+stock bool IsBleedingOut(int client)
+{
+    return GetEntData(client, g_offset_bleedingOut, 1) == 1;
+}
+
+stock bool IsInfected(int client)
+{
+    return GetEntDataFloat(client, g_offset_m_flInfectionTimet) > 0.0 && FloatCompare(GetEntDataFloat(client, g_offset_m_flInfectionDeathTime), GetGameTime()) == 1;
 }
 
 stock bool IsValidClient(int client)
