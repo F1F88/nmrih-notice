@@ -16,7 +16,7 @@ Inspiration source (this project is equivalent to an upgraded version): https://
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
 
-- [vscript_proxy](https://github.com/dysphie/nmrih-vscript-proxy/blob/main/vscript_proxy.inc)
+<!-- - [vscript_proxy](https://github.com/dysphie/nmrih-vscript-proxy/blob/main/vscript_proxy.inc) -->
 
 
 

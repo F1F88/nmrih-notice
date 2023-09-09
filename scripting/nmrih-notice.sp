@@ -12,9 +12,8 @@
 #define REQUIRE_EXTENSIONS
 
 #include <multicolors>
-#include <vscript_proxy>
 
-#define PLUGIN_VERSION                      "1.1.5"
+#define PLUGIN_VERSION                      "1.1.6"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
 
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
