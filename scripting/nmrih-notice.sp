@@ -13,7 +13,7 @@
 
 #include <multicolors>
 
-#define PLUGIN_VERSION                      "1.1.6"
+#define PLUGIN_VERSION                      "1.1.7"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
 
 #define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
@@ -39,8 +39,7 @@ enum struct client_data
 }
 
 int             g_offset_bleedingOut
-                , g_offset_m_flInfectionTimet
-                , g_offset_m_flInfectionDeathTime;
+                , g_offset_m_flInfectionTimet;
 
 bool             cv_notice_bleeding
                 , cv_notice_infected
@@ -78,11 +77,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
         return APLRes_Failure;
     }
 
-    if( (g_offset_m_flInfectionDeathTime = FindSendPropInfo("CNMRiH_Player", "m_flInfectionDeathTime")) <= 0 )
-    {
-        FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::m_flInfectionDeathTime'!");
-        return APLRes_Failure;
-    }
     return APLRes_Success;
 }
 
@@ -461,7 +455,7 @@ stock bool IsBleedingOut(int client)
 
 stock bool IsInfected(int client)
 {
-    return GetEntDataFloat(client, g_offset_m_flInfectionTimet) > 0.0 && FloatCompare(GetEntDataFloat(client, g_offset_m_flInfectionDeathTime), GetGameTime()) == 1;
+    return GetEntDataFloat(client, g_offset_m_flInfectionTimet) != -1.0;
 }
 
 stock bool IsValidClient(int client)
