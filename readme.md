@@ -23,7 +23,7 @@
    | sm_notice_ffmsg_interval | 1.0 | Minimum interval for each friendly injury reminder (in seconds) |
    | sm_notice_keycode | 1 | The password entered on the keyboard when prompted in the chat box |
 
-3. Support `clientprefs`, players can use it in the game! `Settings` control which situations in (1) receive reminders
+3. Support `clientprefs`, players can use it in the game! `Settings` control which situations in `(1)` receive reminders
     - Plugin delayed loading supported
     - Supports 'hot swapping' (even without clientprefs, all considered received)
 
