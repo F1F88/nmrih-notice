@@ -1,0 +1,83 @@
+"Games"
+{
+	"nmrih"
+	{
+		"Signatures"
+		{
+			// CNMRiH_Player::BleedOut(CNMRiH_Player *this)
+			// String -> "Bleedout"
+			"CNMRiH_Player::BleedOut"
+			{
+				"library"		"server"
+				"linux"			"@_ZN13CNMRiH_Player8BleedOutEv"
+				"windows"		"\x55\x8B\xEC\x51\x56\x57\x8B\xF9\xC6\x45\xFF\x01\x8D\x4D\xFF\x8A\x87\x67\x13\x00\x00"
+			}
+
+			// CNMRiH_Player::StopBleedingOut(CNMRiH_Player *this)
+			// String -> "StopBleedingOut"
+			"CNMRiH_Player::StopBleedingOut"
+			{
+				"library"		"server"
+				"linux"			"@_ZN13CNMRiH_Player15StopBleedingOutEv"
+				"windows"		"\x55\x8B\xEC\x51\x56\x57\x8B\xF9\xC6\x45\xFF\x00\x8D\x4D\xFF\x8A\x87\x67\x13\x00\x00\x3A\x01\x74\x2A\x8B\xCF\x80\x79\x58\x00\x74\x2A\x80\x49\x5C\x01\xEB\x2A\x8B\x51\x1C\x85\xD2\x74\x2A\x8D\x87\x67\x13\x00\x00\x2B\xC1\x8B\xCA\x50\xE8\x2A\x2A\x2A\x2A\xC6\x87\x67\x13\x00\x00\x00\xD9\xEE\x68\x2A\x2A\x2A\x2A\x51\xD9\x1C\x24\x6A\x00\x8B\xCF\xE8\x2A\x2A\x2A\x2A\x5F"
+			}
+
+			// CNMRiH_Player::BecomeInfected(CNMRiH_Player *this)
+			// String -> "BecameInfected"
+			"CNMRiH_Player::BecomeInfected"
+			{
+				"library"		"server"
+				"linux"			"@_ZN13CNMRiH_Player14BecomeInfectedEv"
+				"windows"		"\x55\x8B\xEC\x83\xEC\x20\x56\x8B\xF1\x80\xBE\x44\x13\x00\x00\x00"
+			}
+
+			// CNMRiH_Player::CureInfection(CNMRiH_Player *this)
+			// String -> "InfectionCured"
+			"CNMRiH_Player::CureInfection"
+			{
+				"library"		"server"
+				"linux"			"@_ZN13CNMRiH_Player13CureInfectionEv"
+				"windows"		"\x55\x8B\xEC\x83\xEC\x20\x56\x8B\xF1\xE8\x2A\x2A\x2A\x2A\x8D\x4D\xE0"
+			}
+		}
+
+		"Functions"
+		{
+			"CNMRiH_Player::BleedOut"
+			{
+				"signature"		"CNMRiH_Player::BleedOut"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"entity"
+				"arguments"		{}
+			}
+
+			"CNMRiH_Player::StopBleedingOut"
+			{
+				"signature"		"CNMRiH_Player::StopBleedingOut"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"entity"
+				"arguments"		{}
+			}
+
+			"CNMRiH_Player::BecomeInfected"
+			{
+				"signature"		"CNMRiH_Player::BecomeInfected"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"entity"
+				"arguments"		{}
+			}
+
+			"CNMRiH_Player::CureInfection"
+			{
+				"signature"		"CNMRiH_Player::CureInfection"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"entity"
+				"arguments"		{}
+			}
+		}
+	}
+}

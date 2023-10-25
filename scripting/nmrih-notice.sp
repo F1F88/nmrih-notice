@@ -2,80 +2,86 @@
 #pragma semicolon 1
 
 #undef  MAXPLAYERS
-#define MAXPLAYERS                          9
+#define MAXPLAYERS 9                        // The maximum number of players in nmrih is only 9
 
 #include <sourcemod>
 #include <sdktools>
-
-#undef REQUIRE_EXTENSIONS
-#include <clientprefs>
-#define REQUIRE_EXTENSIONS
+#include <dhooks>
 
 #include <multicolors>
 
-#define PLUGIN_VERSION                      "1.1.7"
-#define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
+#include <nmrih-notice>                     // native and forward
 
-#define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
-#define CLIENT_PREFS_BIT_SHOW_INFECTED      (1 << 1)
-#define CLIENT_PREFS_BIT_SHOW_FF            (1 << 2)
-#define CLIENT_PREFS_BIT_SHOW_FK            (1 << 3)
-#define CLIENT_PREFS_BIT_SHOW_PASSWD        (1 << 4)
-#define CLIENT_PREFS_BIT_DEFAULT            (1 << 5) - 1
+
+#define PLUGIN_NAME                         "NMRIH Notice"
+#define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
+#define PLUGIN_VERSION                      "2.0.0"
+
 
 public Plugin myinfo =
 {
-    name        = "NMRIH Notice",
+    name        = PLUGIN_NAME,
     author      = "F1F88",
     description = PLUGIN_DESCRIPTION,
     version     = PLUGIN_VERSION,
     url         = "https://github.com/F1F88/nmrih-notice"
 };
 
-enum struct client_data
+
+enum
 {
-    bool already_noticed_bleeding;
-    bool already_noticed_infected;
+    Offset_m_bIsBleedingOut,                // Speculative name
+    Offset_m_flInfectionTime,
+    Offset_m_flInfectionDeathTime,
+
+    Offset_Total
 }
 
-int             g_offset_bleedingOut
-                , g_offset_m_flInfectionTimet;
+enum
+{
+    Forward_bleedOut,
+    Forward_stopBleedingOut,
+    Forward_becomeInfected,
+    Forward_cureInfection,
 
-bool             cv_notice_bleeding
-                , cv_notice_infected
-                , cv_notice_friend_fire
-                , cv_notice_friend_kill
-                , cv_notice_friend_kill_report
-                , cv_notice_keycode ;
+    Forward_Total
+}
 
-float           cv_notice_scan_frequency
-                , cv_notice_ffmsg_interval;
+enum
+{
+    ConVar_notice_bleeding,
+    ConVar_notice_infected,
+    ConVar_notice_friend_fire,
+    ConVar_notice_friend_kill,
+    ConVar_notice_friend_kill_report,
+    ConVar_notice_keycode,
+    ConVar_notice_ffmsg_interval,
 
-int             g_clientPrefs_value[MAXPLAYERS + 1];
-Cookie          g_clientPrefs_cookie;
-Handle          g_timer;
-client_data     g_client_data[MAXPLAYERS + 1];
+    ConVar_Total
+}
+
+bool            g_loadLate;
+
+int             g_offsetList[Offset_Total];
+
+GlobalForward   g_forwardList[Forward_Total];
+
+any             g_convarList[ConVar_Total];
+
+
+#include "nmrih-notice/UTIL.sp"
+#include "nmrih-notice/client-preference.sp"
+
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    MarkNativeAsOptional("Cookie.Cookie");
-    MarkNativeAsOptional("Cookie.Get");
-    MarkNativeAsOptional("Cookie.GetInt");
-    MarkNativeAsOptional("Cookie.Set");
-    MarkNativeAsOptional("Cookie.SetInt");
-    MarkNativeAsOptional("SetCookieMenuItem");
+    ClientPrefs_MarkNativeAsOptional();     // 客户偏好 - 标记函数为可选
 
-    if( (g_offset_bleedingOut = FindSendPropInfo("CNMRiH_Player", "_bleedingOut")) <= 0 )
-    {
-        FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::_bleedingOut'!");
-        return APLRes_Failure;
-    }
+    LoadOffset();                           // 加载类的属性的偏移量
 
-    if( (g_offset_m_flInfectionTimet = FindSendPropInfo("CNMRiH_Player", "m_flInfectionTime")) <= 0 )
-    {
-        FormatEx(error, err_max, "Can't find offset 'CNMRiH_Player::m_flInfectionTime'!");
-        return APLRes_Failure;
-    }
+    LoadNativeAndForward();                 // 提供外部 native 和 forward
+
+    g_loadLate = late;
 
     return APLRes_Success;
 }
@@ -85,250 +91,122 @@ public void OnPluginStart()
     LoadTranslations("common.phrases");
     LoadTranslations("nmrih-notice.phrases");
 
-    ConVar convar;
-    (convar = CreateConVar("sm_notice_scan_feq",        "0.2", "检查玩家是否感染的速率 (越小检查越快, 性能消耗越大。单位-秒)", _, true, 0.1)).AddChangeHook(On_ConVar_Change);
-    cv_notice_scan_frequency = convar.FloatValue;
-    (convar = CreateConVar("sm_notice_bleeding",        "1", "在聊天框提示玩家流血")).AddChangeHook(On_ConVar_Change);
-    cv_notice_bleeding = convar.BoolValue;
-    (convar = CreateConVar("sm_notice_infected",        "1", "在聊天框提示玩家感染")).AddChangeHook(On_ConVar_Change);
-    cv_notice_infected = convar.BoolValue;
+    LoadConVar();
+    AutoExecConfig(true, PLUGIN_NAME);
 
-    (convar = CreateConVar("sm_notice_ff",              "1", "在聊天框提示队友攻击")).AddChangeHook(On_ConVar_Change);
-    cv_notice_friend_fire = convar.BoolValue;
-    (convar = CreateConVar("sm_notice_fk",              "1", "在聊天框提示队友击杀")).AddChangeHook(On_ConVar_Change);
-    cv_notice_friend_kill = convar.BoolValue;
-    (convar = CreateConVar("sm_notice_fk_rp",           "0", "在聊天框提示队友击杀如何举报")).AddChangeHook(On_ConVar_Change);
-    cv_notice_friend_kill_report = convar.BoolValue;
-    (convar = CreateConVar("sm_notice_ffmsg_interval",  "1.0", "队友攻击的每条消息之间最短时间间隔（秒）")).AddChangeHook(On_ConVar_Change);
-    cv_notice_ffmsg_interval = convar.FloatValue;
+    LoadGameData();                         // 加载需要绕行的函数
 
-    (convar = CreateConVar("sm_notice_keycode",         "1", "键盘输入事件提示类型 | 0: 关闭 | 1: 显示输入的密码 | ")).AddChangeHook(On_ConVar_Change);
-    cv_notice_keycode = convar.BoolValue;
+    LoadHookEvent();                        // 加载监听事件
 
-    CreateConVar("sm_nmrih_notice_version",             PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_SPONLY | FCVAR_DONTRECORD);
-
-    AutoExecConfig(true, "nmrih-notice");
-
-    HookEvent("player_spawn", Event_PlayerSpawn);
-
-    if( cv_notice_friend_fire ) {
-        HookEvent("player_hurt", Event_PlayerHurt);
-    }
-
-    if( cv_notice_friend_kill ) {
-        HookEvent("player_death", Event_PlayerDeath);
-    }
-
-    if( cv_notice_keycode )
-    {
-        HookEvent("keycode_enter", Event_Keycode_Enter);
-    }
-
-    if( LibraryExists("clientprefs") )
-    {
-        g_clientPrefs_cookie = new Cookie("nmrih-notice clientPrefs", "nmrih-notice clientPrefs", CookieAccess_Private);
-        SetCookieMenuItem(CustomCookieMenu, 0, "NMRIH Notice");
-    }
+    LoadLateSupport();                      // 支持延迟加载插件
 }
 
-public void On_ConVar_Change(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-    if ( convar == INVALID_HANDLE )
-    {
-        return ;
-    }
-    char convar_Name[64];
-    convar.GetName(convar_Name, 64);
 
-    if( strcmp(convar_Name, "sm_notice_player_debuff_scan_feq") == 0 )
-    {
-        cv_notice_scan_frequency = convar.FloatValue;
-        if( g_timer != INVALID_HANDLE )
-        {
-            CloseHandle(g_timer);
-        }
-        g_timer = CreateTimer(cv_notice_scan_frequency, Timer_check_player_status, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-    }
-    else if( strcmp(convar_Name, "sm_notice_player_debuff_bleeding") == 0 )
-    {
-        cv_notice_bleeding = convar.BoolValue;
-    }
-    else if( strcmp(convar_Name, "sm_notice_player_debuff_infected") == 0 )
-    {
-        cv_notice_infected = convar.BoolValue;
-    }
-    else if( strcmp(convar_Name, "sm_notice_ff") == 0 )
-    {
-        cv_notice_friend_fire = convar.BoolValue;
-        if( cv_notice_friend_fire )
-        {
-            HookEvent("player_hurt", Event_PlayerHurt);
-        }
-        else
-        {
-            UnhookEvent("player_hurt", Event_PlayerHurt);
-        }
-    }
-    else if( strcmp(convar_Name, "sm_notice_fk") == 0 )
-    {
-        cv_notice_friend_kill = convar.BoolValue;
-        if( cv_notice_friend_kill )
-        {
-            HookEvent("player_death", Event_PlayerHurt);
-        }
-        else{
-            UnhookEvent("player_death", Event_PlayerHurt);
-        }
-    }
-    else if( strcmp(convar_Name, "sm_notice_fk_rp") == 0 )
-    {
-        cv_notice_friend_kill_report = convar.BoolValue;
-    }
-    else if( strcmp(convar_Name, "sm_notice_ffmsg_interval") == 0 )
-    {
-        cv_notice_ffmsg_interval = convar.FloatValue;
-    }
-    else if( strcmp(convar_Name, "sm_notice_keycode_enable") == 0 )
-    {
-        cv_notice_keycode = convar.BoolValue;
-        if( cv_notice_keycode )
-        {
-            HookEvent("keycode_enter", Event_Keycode_Enter);
-        }
-        else
-        {
-            UnhookEvent("keycode_enter", Event_Keycode_Enter);
-        }
-    }
+// 玩家开始流血
+MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam params)
+{
+    PrintToServer("Func BleedOut | client = %d | %N |", client, client);
+
+    Action result;
+    Call_StartForward(g_forwardList[Forward_bleedOut]);
+    Call_PushCell(client);
+    Call_Finish(result);
+    if( result == Plugin_Handled || result == Plugin_Stop )
+        return MRES_Supercede;
+
+    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_bleeding], CLIENT_PREFS_BIT_SHOW_BLEEDING, "%t", "Notifice_Bleeding", client);
+
+    return MRES_Ignored;
 }
 
-public void OnMapStart()
+// 玩家结束流血
+// Note1: 死亡不会触发
+// Note2: 复活不会触发
+// Note3: 使用 绷带、医疗包 后会连续触发两次
+// Note4: 使用 医疗箱治疗后 只会触发一次
+MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHookParam params)
 {
-    g_timer = CreateTimer(cv_notice_scan_frequency, Timer_check_player_status, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+    PrintToServer("Func Stop Bleed | client = %d | %N |", client, client);
+
+    Action result;
+    Call_StartForward(g_forwardList[Forward_stopBleedingOut]);
+    Call_PushCell(client);
+    Call_Finish(result);
+    if( result == Plugin_Handled || result == Plugin_Stop )
+        return MRES_Supercede;
+
+    return MRES_Ignored;
 }
 
-// 玩家复活时初始化流血、感染数组
-public void Event_PlayerSpawn(Event event, char[] name, bool bDontBroadcast )
+// 玩家开始感染
+MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHookParam params)
 {
-    int client = GetClientOfUserId(GetEventInt(event, "userid"));
-    g_client_data[client].already_noticed_bleeding = false;
-    g_client_data[client].already_noticed_infected = false;
+    PrintToServer("Func Become Infecte | client = %d | %N |", client, client);
+
+    Action result;
+    Call_StartForward(g_forwardList[Forward_becomeInfected]);
+    Call_PushCell(client);
+    Call_Finish(result);
+    if( result == Plugin_Handled || result == Plugin_Stop )
+        return MRES_Supercede;
+
+    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_bleeding], CLIENT_PREFS_BIT_SHOW_BLEEDING, "%t", "Notifice_Infection", client);
+
+    return MRES_Ignored;
 }
 
-// 每隔一段时间检查玩家是否流血、感染
-public Action Timer_check_player_status(Handle timer, any data)
+// 玩家结束感染
+// Note1: 死亡不会触发
+// Note2: 复活会连续触发两次
+// Note3: 使用 疫苗 后只会触发一次
+MRESReturn Detour_CNMRiH_Player_CureInfection(int client, DHookReturn ret, DHookParam params)
 {
-    static int client;
-    for( client=1; client<=MaxClients; ++client )
-    {
-        if( ! IsClientInGame(client) || ! IsPlayerAlive(client) )
-        {
-            continue ;
-        }
+    PrintToServer("Func Cure Infecte | client = %d | %N |", client, client);
 
-        if( IsBleedingOut(client) )
-        {
-            if( cv_notice_bleeding && ! g_client_data[client].already_noticed_bleeding )
-            {
-                g_client_data[client].already_noticed_bleeding = true;
-                for(int i=1; i<=MaxClients; ++i)
-                {
-                    if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_BLEEDING )
-                    {
-                        CPrintToChat(i, "%t", "Notifice_Bleeding", client);
-                    }
-                }
-            }
-        }
-        else    // 如果已治愈则重置数据
-        {
-            if( g_client_data[client].already_noticed_bleeding == true )
-            {
-                g_client_data[client].already_noticed_bleeding = false;
-            }
-        }
+    Action result;
+    Call_StartForward(g_forwardList[Forward_cureInfection]);
+    Call_PushCell(client);
+    Call_Finish(result);
+    if( result == Plugin_Handled || result == Plugin_Stop )
+        return MRES_Supercede;
 
-        if( IsInfected(client) )
-        {
-            if( cv_notice_infected && ! g_client_data[client].already_noticed_infected )
-            {
-                g_client_data[client].already_noticed_infected = true;
-                for(int i=1; i<=MaxClients; ++i)
-                {
-                    if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_INFECTED )
-                    {
-                        CPrintToChat(i, "%t", "Notifice_Infection", client);
-                    }
-                }
-            }
-        }
-        else    // 如果已治愈则重置数据
-        {
-            if( g_client_data[client].already_noticed_infected == true )
-            {
-                g_client_data[client].already_noticed_infected = false;
-            }
-        }
-    }
-    return Plugin_Continue;
+    return MRES_Ignored;
 }
 
 
 // 感染玩家被攻击通知
-public void Event_PlayerHurt(Event hEvent, char[] szEventName, bool bDontBroadcast )
+public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
     float curTime = GetGameTime();
     static float lastTime = 0.0;
-    int victim = GetClientOfUserId( GetEventInt( hEvent, "userid" ) );
-    int attacker = GetClientOfUserId( GetEventInt( hEvent, "attacker" ) );
+    int victim = GetClientOfUserId( event.GetInt("userid") );
+    int attacker = GetClientOfUserId( event.GetInt("attacker") );
 
-    if( curTime - lastTime < cv_notice_ffmsg_interval || victim == attacker || ! IsValidClient(attacker) || ! IsValidClient(victim) )
-    {
+    // prevent flood
+    if( curTime - lastTime < g_convarList[ConVar_notice_ffmsg_interval] || victim == attacker || ! UTIL_IsValidClient(attacker) || ! UTIL_IsValidClient(victim) )
         return ;
-    }
 
     lastTime = curTime;
 
-    for(int i=1; i<=MaxClients; ++i)
-    {
-        if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_FF )
-        {
-            CPrintToChat(i, "%t", "Notifice_Attacked", attacker, victim);
-        }
-    }
+    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_friend_fire], CLIENT_PREFS_BIT_SHOW_FF, "%t", "Notifice_Attacked", attacker, victim);
 }
 
 // 死亡通知
-public void Event_PlayerDeath(Event hEvent, char[] szEventName, bool bDontBroadcast )
+public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-    int victim_client = GetClientOfUserId( GetEventInt(hEvent, "userid") );
-    if( ! IsValidClient(victim_client) )
-    {
+    int victim = GetClientOfUserId( event.GetInt("userid") );
+    if( ! UTIL_IsValidClient(victim) || event.GetInt("npctype") != 0 )
         return ;
-    }
 
-    if( GetEventInt( hEvent, "npctype" ) != 0 )
-    {
+    int attacker = GetClientOfUserId( event.GetInt("attacker") );
+    if( attacker == victim || ! UTIL_IsValidClient(attacker) )
         return ;
-    }
 
-    int attacker_client = GetClientOfUserId( GetEventInt( hEvent, "attacker" ) );
-    if( victim_client == attacker_client || ! IsValidClient(attacker_client) )
-    {
-        return;
-    }
+    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_friend_kill], CLIENT_PREFS_BIT_SHOW_FK, "%t", "Notifice_Kill", attacker, victim);
 
-    for(int i=1; i<=MaxClients; ++i)
+    if( g_convarList[ConVar_notice_friend_kill_report] )
     {
-        if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_FK )
-        {
-            CPrintToChat(i, "%t", "Notifice_Kill", attacker_client, victim_client);
-        }
-    }
-
-    if( cv_notice_friend_kill_report )
-    {
-        CPrintToChatAll("%t", "Notifice_Vote Kick", attacker_client);
+        CPrintToChatAll("%t", "Notifice_Vote Kick", attacker);
     }
 }
 
@@ -340,125 +218,213 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
     int client = event.GetInt("player");
     int keypad = event.GetInt("keypad_idx");
 
-    event.GetString("code", enter_code, 16);
-    GetEntPropString(keypad, Prop_Data, "m_pszCode", correct_code, 16);
+    event.GetString("code", enter_code, sizeof(enter_code));
+    GetEntPropString(keypad, Prop_Data, "m_pszCode", correct_code, sizeof(correct_code));
     // PrintToServer("Password:| %s |", correct_code);
 
-    if( strcmp(enter_code, correct_code) == 0 )
+    if( ! strcmp(enter_code, correct_code) )
     {
-        for(int i=1; i<=MaxClients; ++i)
-        {
-            if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_PASSWD )
-            {
-                CPrintToChat(i, "%t","Notifice_InputCorrectCode", client, enter_code);
-            }
-        }
+        UTIL_CPrintToChatAll(g_convarList[ConVar_notice_keycode], CLIENT_PREFS_BIT_SHOW_PASSWD, "%t", "Notifice_InputCorrectCode", client, enter_code);
     }
     else
     {
-        for(int i=1; i<=MaxClients; ++i)
-        {
-            if( IsClientInGame(i) && g_clientPrefs_value[i] & CLIENT_PREFS_BIT_SHOW_PASSWD )
-            {
-                CPrintToChat(i, "%t","Notifice_InputIncorrectCode", client, enter_code);
-            }
-        }
+        UTIL_CPrintToChatAll(g_convarList[ConVar_notice_keycode], CLIENT_PREFS_BIT_SHOW_PASSWD, "%t", "Notifice_InputIncorrectCode", client, enter_code);
     }
+}
+
+// =============================== Cookie Menu ===============================
+public void OnAllPluginsLoaded()
+{
+	ClientPrefs_CheckLibExistsAndLoad();
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+    ClientPrefs_CheckLibExistsAndLoad();
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+    ClientPrefs_CheckLibExistsAndLoad();
 }
 
 public void OnClientPutInServer(int client)
 {
-    g_clientPrefs_value[client] = g_clientPrefs_cookie.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
+    ClientPrefs_ReadClientData(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    g_clientPrefs_value[client] = 0;
+    ClientPrefs_ResetClientData(client);
 }
 
-void CustomCookieMenu(int client, CookieMenuAction action, any info, char[] buffer, int maxlen)
+// =============================== 封装 ======================================
+void LoadOffset()
 {
-    ShowCookiesMenu(client, 0);
+    g_offsetList[Offset_m_bIsBleedingOut]       = UTIL_LoadOffsetOrFail("CNMRiH_Player", "_bleedingOut");
+    g_offsetList[Offset_m_flInfectionTime]      = UTIL_LoadOffsetOrFail("CNMRiH_Player", "m_flInfectionTime");
+    g_offsetList[Offset_m_flInfectionDeathTime] = UTIL_LoadOffsetOrFail("CNMRiH_Player", "m_flInfectionDeathTime");
 }
 
-void ShowCookiesMenu(int client, int at=0)
+void LoadGameData()
 {
-    Menu menu_cookie = new Menu(MenuHandler_Cookies, MenuAction_Select | MenuAction_Cancel);
-    menu_cookie.ExitBackButton = true;
-    menu_cookie.SetTitle("%T", "Notifice_PrefsMenu_Title", client);
+    GameData gamedata = new GameData("nmrih-notice.games");
+    if( ! gamedata)
+        SetFailState("Couldn't find nmrih-notice.games gamedata.");
 
-    char item_info[16], item_display[128];
-    bool item_flag;
+    DynamicDetour detour;
+    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::BleedOut");
+    if( ! detour )
+        SetFailState("Failed to find signature CNMRiH_Player::BleedOut");
+    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_BleedOut);
+    delete detour;
 
-    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_BLEEDING ? true : false;
-    FormatEx(item_display, sizeof(item_display), "%T - %T", "Notifice_PrefsMenu_Item_Bleeding", client, item_flag ? "Yes" : "No", client);
-    IntToString(CLIENT_PREFS_BIT_SHOW_BLEEDING, item_info, sizeof(item_info));
-    menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
+    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::StopBleedingOut");
+    if( ! detour )
+        SetFailState("Failed to find signature CNMRiH_Player::StopBleedingOut");
+    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_StopBleedingOut);
+    delete detour;
 
-    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_INFECTED ? true : false;
-    FormatEx(item_display, sizeof(item_display), "%T - %T", "Notifice_PrefsMenu_Item_Infected", client, item_flag ? "Yes" : "No", client);
-    IntToString(CLIENT_PREFS_BIT_SHOW_INFECTED, item_info, sizeof(item_info));
-    menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
+    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::BecomeInfected");
+    if( ! detour )
+        SetFailState("Failed to find signature CNMRiH_Player::BecomeInfected");
+    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_BecomeInfected);
+    delete detour;
 
-    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_FF ? true : false;
-    FormatEx(item_display, sizeof(item_display), "%T - %T", "Notifice_PrefsMenu_Item_ff", client, item_flag ? "Yes" : "No", client);
-    IntToString(CLIENT_PREFS_BIT_SHOW_FF, item_info, sizeof(item_info));
-    menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
+    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::CureInfection");
+    if( ! detour )
+        SetFailState("Failed to find signature CNMRiH_Player::CureInfection");
+    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_CureInfection);
+    delete detour;
 
-    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_FK ? true : false;
-    FormatEx(item_display, sizeof(item_display), "%T - %T", "Notifice_PrefsMenu_Item_fk", client, item_flag ? "Yes" : "No", client);
-    IntToString(CLIENT_PREFS_BIT_SHOW_FK, item_info, sizeof(item_info));
-    menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
-
-    item_flag = g_clientPrefs_value[client] & CLIENT_PREFS_BIT_SHOW_PASSWD ? true : false;
-    FormatEx(item_display, sizeof(item_display), "%T - %T", "Notifice_PrefsMenu_Item_passwd", client, item_flag ? "Yes" : "No", client);
-    IntToString(CLIENT_PREFS_BIT_SHOW_PASSWD, item_info, sizeof(item_info));
-    menu_cookie.AddItem(item_info, item_display, ITEMDRAW_DEFAULT);
-
-    menu_cookie.DisplayAt(client, at, 30);
+    delete gamedata;
 }
 
-int MenuHandler_Cookies(Menu menu, MenuAction action, int param1, int param2)
+void LoadConVar()
 {
-    switch( action )
+    ConVar convar;
+    (convar = CreateConVar("sm_notice_bleeding",        "1", "在聊天框提示玩家流血",            _, true, 0.0, true, 1.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_bleeding] = convar.BoolValue;
+    (convar = CreateConVar("sm_notice_infected",        "1", "在聊天框提示玩家感染",            _, true, 0.0, true, 1.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_infected] = convar.BoolValue;
+    (convar = CreateConVar("sm_notice_ff",              "1", "在聊天框提示队友攻击",            _, true, 0.0, true, 1.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_friend_fire] = convar.BoolValue;
+    (convar = CreateConVar("sm_notice_fk",              "1", "在聊天框提示队友击杀",            _, true, 0.0, true, 1.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_friend_kill] = convar.BoolValue;
+    (convar = CreateConVar("sm_notice_fk_rp",           "0", "在聊天框提示队友击杀如何举报",    _, true, 0.0, true, 1.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_friend_kill_report] = convar.BoolValue;
+    (convar = CreateConVar("sm_notice_ffmsg_interval",  "1.0", "每条友伤提醒最短间隔（秒）",    _, true, 0.0, true, 600.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_ffmsg_interval] = convar.FloatValue;
+    (convar = CreateConVar("sm_notice_keycode",         "1", "在聊天框提示键盘输入的密码",      _, true, 0.0, true, 1.0)).AddChangeHook(OnConVarChange);
+    g_convarList[ConVar_notice_keycode] = convar.BoolValue;
+
+    CreateConVar("sm_nmrih_notice_version",             PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_SPONLY | FCVAR_DONTRECORD);
+}
+
+public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+    char convarName[64];
+    convar.GetName(convarName, 64);
+
+    if( ! strcmp(convarName, "sm_notice_player_debuff_bleeding") )
     {
-        case MenuAction_Cancel:
-        {
-            delete menu;
-            switch( param2 )
-            {
-                case MenuCancel_ExitBack:
-                {
-                    ShowCookieMenu(param1);
-                }
-            }
-            return 0;
-        }
-        case MenuAction_Select:
-        {
-            char item_info[16];   // int - bit info
-            menu.GetItem(param2, item_info, sizeof(item_info));
-
-            g_clientPrefs_value[param1] ^= StringToInt(item_info);
-            g_clientPrefs_cookie.SetInt(param1, g_clientPrefs_value[param1]);
-
-            ShowCookiesMenu(param1, RoundToFloor(Logarithm(StringToFloat(item_info), 2.0)) / 7 * 7);
-        }
+        g_convarList[ConVar_notice_bleeding] = convar.BoolValue;
     }
-    return 0;
+    else if( ! strcmp(convarName, "sm_notice_player_debuff_infected") )
+    {
+        g_convarList[ConVar_notice_infected] = convar.BoolValue;
+    }
+    else if( ! strcmp(convarName, "sm_notice_ff") )
+    {
+        g_convarList[ConVar_notice_friend_fire] = convar.BoolValue;
+        UTIL_ChangeHookEvent(g_convarList[ConVar_notice_friend_fire], "player_hurt", Event_PlayerHurt);
+    }
+    else if( ! strcmp(convarName, "sm_notice_fk") )
+    {
+        g_convarList[ConVar_notice_friend_kill] = convar.BoolValue;
+        UTIL_ChangeHookEvent(g_convarList[ConVar_notice_friend_kill], "player_death", Event_PlayerDeath);
+    }
+    else if( ! strcmp(convarName, "sm_notice_fk_rp") )
+    {
+        g_convarList[ConVar_notice_friend_kill_report] = convar.BoolValue;
+    }
+    else if( ! strcmp(convarName, "sm_notice_ffmsg_interval") )
+    {
+        g_convarList[ConVar_notice_ffmsg_interval] = convar.FloatValue;
+    }
+    else if( ! strcmp(convarName, "sm_notice_keycode_enable") )
+    {
+        g_convarList[ConVar_notice_keycode] = convar.BoolValue;
+        UTIL_ChangeHookEvent(g_convarList[ConVar_notice_keycode], "keycode_enter", Event_Keycode_Enter);
+    }
 }
 
-stock bool IsBleedingOut(int client)
+void LoadHookEvent()
 {
-    return GetEntData(client, g_offset_bleedingOut, 1) == 1;
+    if( g_convarList[ConVar_notice_friend_fire] )
+        HookEvent("player_hurt", Event_PlayerHurt);
+
+    if( g_convarList[ConVar_notice_friend_kill] )
+        HookEvent("player_death", Event_PlayerDeath);
+
+    if( g_convarList[ConVar_notice_keycode] )
+        HookEvent("keycode_enter", Event_Keycode_Enter);
 }
 
-stock bool IsInfected(int client)
+void LoadLateSupport()
 {
-    return GetEntDataFloat(client, g_offset_m_flInfectionTimet) != -1.0;
+    if( ! g_loadLate )
+        return ;
+
+    ClientPrefs_LoadLate();
 }
 
-stock bool IsValidClient(int client)
+public void LoadNativeAndForward()
 {
-    return client > 0 && client <= MaxClients && IsClientInGame(client);
+    CreateNative("NMR_Notice_IsBleedingOut",            Native_NMR_Notice_IsBleedingOut);
+    CreateNative("NMR_Notice_IsInfected",               Native_NMR_Notice_IsInfected);
+    CreateNative("NMR_Notice_GetInfectionTime",         Native_NMR_Notice_GetInfectionTime);
+    CreateNative("NMR_Notice_GetInfectionDeathTime",    Native_NMR_Notice_GetInfectionDeathTime);
+
+    g_forwardList[Forward_bleedOut]         = new GlobalForward("NMR_Notice_OnPlayerBleedOut",          ET_Event, Param_Cell);
+    g_forwardList[Forward_stopBleedingOut]  = new GlobalForward("NMR_Notice_OnPlayerStopBleedingOut",   ET_Event, Param_Cell);
+    g_forwardList[Forward_becomeInfected]   = new GlobalForward("NMR_Notice_OnPlayerBecomeInfected",    ET_Event, Param_Cell, Param_Float, Param_Float);
+    g_forwardList[Forward_cureInfection]    = new GlobalForward("NMR_Notice_OnPlayerCureInfection",     ET_Event, Param_Cell);
+}
+
+
+public any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! UTIL_IsValidClient(client) )
+        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
+
+    return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1) == 1;
+}
+
+public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! UTIL_IsValidClient(client) )
+        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
+
+    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]) != -1.0;
+}
+
+public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! UTIL_IsValidClient(client) )
+        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
+
+    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]);
+}
+
+public any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! UTIL_IsValidClient(client) )
+        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
+
+    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionDeathTime]);
 }
