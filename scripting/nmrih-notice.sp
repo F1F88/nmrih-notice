@@ -15,7 +15,7 @@
 
 #define PLUGIN_NAME                         "NMRIH Notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "2.0.1"
+#define PLUGIN_VERSION                      "2.0.2"
 
 
 public Plugin myinfo =
@@ -104,7 +104,7 @@ public void OnPluginStart()
 // 玩家开始流血
 MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam params)
 {
-    PrintToServer("Func BleedOut | client = %d | %N |", client, client);
+    // PrintToServer("Func BleedOut | client = %d | %N |", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_bleedOut]);
@@ -125,7 +125,7 @@ MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam
 // Note4: 使用 医疗箱治疗后 只会触发一次
 MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHookParam params)
 {
-    PrintToServer("Func Stop Bleed | client = %d | %N |", client, client);
+    // PrintToServer("Func Stop Bleed | client = %d | %N |", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_stopBleedingOut]);
@@ -140,7 +140,7 @@ MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHo
 // 玩家开始感染
 MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHookParam params)
 {
-    PrintToServer("Func Become Infecte | client = %d | %N |", client, client);
+    // PrintToServer("Func Become Infecte | client = %d | %N |", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_becomeInfected]);
@@ -160,7 +160,7 @@ MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHoo
 // Note3: 使用 疫苗 后只会触发一次
 MRESReturn Detour_CNMRiH_Player_CureInfection(int client, DHookReturn ret, DHookParam params)
 {
-    PrintToServer("Func Cure Infecte | client = %d | %N |", client, client);
+    // PrintToServer("Func Cure Infecte | client = %d | %N |", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_cureInfection]);
