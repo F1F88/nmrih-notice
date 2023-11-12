@@ -13,9 +13,9 @@
 #include <nmrih-notice>                     // native and forward
 
 
-#define PLUGIN_NAME                         "NMRIH Notice"
+#define PLUGIN_NAME                         "nmrih_notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "2.0.2"
+#define PLUGIN_VERSION                      "2.0.3"
 
 
 public Plugin myinfo =
@@ -97,7 +97,8 @@ public void OnPluginStart()
 
     LoadHookEvent();                        // 加载监听事件
 
-    LoadLateSupport();                      // 支持延迟加载插件
+    if( g_loadLate )                        // 支持延迟加载插件
+        LoadLateSupport();
 }
 
 
@@ -123,6 +124,7 @@ MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam
 // Note2: 复活不会触发
 // Note3: 使用 绷带、医疗包 后会连续触发两次
 // Note4: 使用 医疗箱治疗后 只会触发一次
+// Note5: 玩家 撤离后 只会触发一次
 MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHookParam params)
 {
     // PrintToServer("Func Stop Bleed | client = %d | %N |", client, client);
@@ -257,7 +259,7 @@ public void OnClientDisconnect(int client)
     ClientPrefs_ResetClientData(client);
 }
 
-// =============================== 封装 ======================================
+// =================================== 封装 ====================================
 void LoadOffset()
 {
     g_offsetList[Offset_m_bIsBleedingOut]       = UTIL_LoadOffsetOrFail("CNMRiH_Player", "_bleedingOut");
@@ -372,13 +374,10 @@ void LoadHookEvent()
 
 void LoadLateSupport()
 {
-    if( ! g_loadLate )
-        return ;
-
     ClientPrefs_LoadLate();
 }
 
-// =============================== UTIL ======================================
+// ================================== UTIL ===================================
 stock int UTIL_LoadOffsetOrFail(const char[] cls, const char[] prop, PropFieldType &type=view_as<PropFieldType>(0), int &num_bits=0, int &local_offset=0, int &array_size=0)
 {
     int offset = FindSendPropInfo(cls, prop, type, num_bits, local_offset, array_size);
@@ -415,7 +414,7 @@ stock bool UTIL_IsValidClient(int client)
     return client > 0 && client <= MaxClients && IsClientInGame(client);
 }
 
-// =============================== Native ====================================
+// ================================= Native ==================================
 public void LoadNativeAndForward()
 {
     CreateNative("NMR_Notice_IsBleedingOut",            Native_NMR_Notice_IsBleedingOut);
