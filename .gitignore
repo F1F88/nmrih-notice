@@ -1,3 +1,4 @@
 plugins/
 *.zip
 .vscode
+.*
