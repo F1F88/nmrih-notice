@@ -8,15 +8,17 @@
 #include <sdktools>
 #include <dhooks>
 
-#include <multicolors>
+#include <clients_methodmap>
 
-#include <nmrih-notice>                     // native and forward
+#include "common/native/nmrih-notice.inc"   // native and forward
+#include "common/utils/InitializeUtils.inc"
+#include "common/utils/EventUtils.inc"
+#include "common/utils/ClientPrefsUtils.inc"
 
 
 #define PLUGIN_NAME                         "nmrih_notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "2.0.3"
-
+#define PLUGIN_VERSION                      "2.1.0"
 
 public Plugin myinfo =
 {
@@ -27,10 +29,29 @@ public Plugin myinfo =
     url         = "https://github.com/F1F88/nmrih-notice"
 };
 
+#define CLIENT_PREFS_NAME                   "NMRIH Notice ClientPrefs"
+#define CLIENT_PREFS_DESCRIPTION            CLIENT_PREFS_NAME
+#define CLIENT_PREFS_MENU_ITEM              "NMRIH Notice"
+#define CLIENT_PREFS_BIT_SHOW_BLEEDING      (1 << 0)
+#define CLIENT_PREFS_BIT_SHOW_INFECTED      (1 << 1)
+#define CLIENT_PREFS_BIT_SHOW_FF            (1 << 2)
+#define CLIENT_PREFS_BIT_SHOW_FK            (1 << 3)
+#define CLIENT_PREFS_BIT_SHOW_PASSWD        (1 << 4)
+#define CLIENT_PREFS_BIT_ALL                CLIENT_PREFS_BIT_SHOW_BLEEDING|CLIENT_PREFS_BIT_SHOW_INFECTED|CLIENT_PREFS_BIT_SHOW_FF|CLIENT_PREFS_BIT_SHOW_FK|CLIENT_PREFS_BIT_SHOW_PASSWD
+#define CLIENT_PREFS_BIT_DEFAULT            CLIENT_PREFS_BIT_ALL
+
+CookieEx        g_cookie;
+
+int             g_offsetList[Offset_Total];
+
+GlobalForward   g_forwardList[Forward_Total];
+
+any             g_convarList[ConVar_Total];
 
 enum
 {
     Offset_m_bIsBleedingOut,                // Speculative name
+    Offset_m_bVaccinated,
     Offset_m_flInfectionTime,
     Offset_m_flInfectionDeathTime,
 
@@ -60,27 +81,14 @@ enum
     ConVar_Total
 }
 
-bool            g_loadLate;
-
-int             g_offsetList[Offset_Total];
-
-GlobalForward   g_forwardList[Forward_Total];
-
-any             g_convarList[ConVar_Total];
-
-
-#include "nmrih-notice/client-preference.sp"
-
-
+// =============================== Init ===============================
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    ClientPrefs_MarkNativeAsOptional();     // 客户偏好 - 标记函数为可选
+    MarkClientPrefsNativeAsOptional();      // 客户偏好 - 标记函数为可选
 
     LoadOffset();                           // 加载类的属性的偏移量
 
     LoadNativeAndForward();                 // 提供外部 native 和 forward
-
-    g_loadLate = late;
 
     return APLRes_Success;
 }
@@ -96,12 +104,21 @@ public void OnPluginStart()
     LoadGameData();                         // 加载需要绕行的函数
 
     LoadHookEvent();                        // 加载监听事件
+}
 
-    if( g_loadLate )                        // 支持延迟加载插件
-        LoadLateSupport();
+// =============================== Cookie Menu ===============================
+public void OnAllPluginsLoaded()
+{
+	LoadCookie();
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+    LoadCookie();
 }
 
 
+// =============================== Detour ===============================
 // 玩家开始流血
 MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam params)
 {
@@ -114,7 +131,7 @@ MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam
     if( result == Plugin_Handled || result == Plugin_Stop )
         return MRES_Supercede;
 
-    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_bleeding], CLIENT_PREFS_BIT_SHOW_BLEEDING, "%t", "Notifice_Bleeding", client);
+    g_cookie.CPrintToChatAllExI(CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_BLEEDING, "Notifice_Bleeding", client);
 
     return MRES_Ignored;
 }
@@ -140,6 +157,7 @@ MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHo
 }
 
 // 玩家开始感染
+// Note1: 即使已注射疫苗仍会触发此绕行
 MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHookParam params)
 {
     // PrintToServer("Func Become Infecte | client = %d | %N |", client, client);
@@ -151,7 +169,8 @@ MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHoo
     if( result == Plugin_Handled || result == Plugin_Stop )
         return MRES_Supercede;
 
-    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_bleeding], CLIENT_PREFS_BIT_SHOW_BLEEDING, "%t", "Notifice_Infection", client);
+    if( ! NMR_Notice_IsVaccinated(client) )
+        g_cookie.CPrintToChatAllExI(CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_INFECTED, "Notifice_Infection", client);
 
     return MRES_Ignored;
 }
@@ -175,6 +194,7 @@ MRESReturn Detour_CNMRiH_Player_CureInfection(int client, DHookReturn ret, DHook
 }
 
 
+// =============================== Event CallBack ===============================
 // 感染玩家被攻击通知
 public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
@@ -184,26 +204,26 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
     int attacker = GetClientOfUserId( event.GetInt("attacker") );
 
     // prevent flood
-    if( curTime - lastTime < g_convarList[ConVar_notice_ffmsg_interval] || victim == attacker || ! UTIL_IsValidClient(attacker) || ! UTIL_IsValidClient(victim) )
+    if( curTime - lastTime < g_convarList[ConVar_notice_ffmsg_interval] || victim == attacker || ! IsValidClient(attacker) || ! IsValidClient(victim) )
         return ;
 
     lastTime = curTime;
 
-    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_friend_fire], CLIENT_PREFS_BIT_SHOW_FF, "%t", "Notifice_Attacked", attacker, victim);
+    g_cookie.CPrintToChatAllExII(CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_FF, "Notifice_Attacked", attacker, victim);
 }
 
 // 死亡通知
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     int victim = GetClientOfUserId( event.GetInt("userid") );
-    if( ! UTIL_IsValidClient(victim) || event.GetInt("npctype") != 0 )
+    if( ! IsValidClient(victim) || event.GetInt("npctype") != 0 )
         return ;
 
     int attacker = GetClientOfUserId( event.GetInt("attacker") );
-    if( attacker == victim || ! UTIL_IsValidClient(attacker) )
+    if( attacker == victim || ! IsValidClient(attacker) )
         return ;
 
-    UTIL_CPrintToChatAll(g_convarList[ConVar_notice_friend_kill], CLIENT_PREFS_BIT_SHOW_FK, "%t", "Notifice_Kill", attacker, victim);
+    g_cookie.CPrintToChatAllExII(CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_FK, "Notifice_Kill", attacker, victim);
 
     if( g_convarList[ConVar_notice_friend_kill_report] )
     {
@@ -225,44 +245,19 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 
     if( ! strcmp(enter_code, correct_code) )
     {
-        UTIL_CPrintToChatAll(g_convarList[ConVar_notice_keycode], CLIENT_PREFS_BIT_SHOW_PASSWD, "%t", "Notifice_InputCorrectCode", client, enter_code);
+        g_cookie.CPrintToChatAllExIS(CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_PASSWD, "Notifice_InputCorrectCode", client, enter_code);
     }
     else
     {
-        UTIL_CPrintToChatAll(g_convarList[ConVar_notice_keycode], CLIENT_PREFS_BIT_SHOW_PASSWD, "%t", "Notifice_InputIncorrectCode", client, enter_code);
+        g_cookie.CPrintToChatAllExIS(CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_PASSWD, "Notifice_InputIncorrectCode", client, enter_code);
     }
-}
-
-// =============================== Cookie Menu ===============================
-public void OnAllPluginsLoaded()
-{
-	ClientPrefs_CheckLibExistsAndLoad();
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-    ClientPrefs_CheckLibExistsAndLoad();
-}
-
-public void OnLibraryRemoved(const char[] name)
-{
-    ClientPrefs_CheckLibExistsAndLoad();
-}
-
-public void OnClientPutInServer(int client)
-{
-    ClientPrefs_ReadClientData(client);
-}
-
-public void OnClientDisconnect(int client)
-{
-    ClientPrefs_ResetClientData(client);
 }
 
 // =================================== 封装 ====================================
 void LoadOffset()
 {
     g_offsetList[Offset_m_bIsBleedingOut]       = UTIL_LoadOffsetOrFail("CNMRiH_Player", "_bleedingOut");
+    g_offsetList[Offset_m_bVaccinated]          = UTIL_LoadOffsetOrFail("CNMRiH_Player", "_vaccinated");
     g_offsetList[Offset_m_flInfectionTime]      = UTIL_LoadOffsetOrFail("CNMRiH_Player", "m_flInfectionTime");
     g_offsetList[Offset_m_flInfectionDeathTime] = UTIL_LoadOffsetOrFail("CNMRiH_Player", "m_flInfectionDeathTime");
 }
@@ -338,12 +333,12 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
     else if( ! strcmp(convarName, "sm_notice_ff") )
     {
         g_convarList[ConVar_notice_friend_fire] = convar.BoolValue;
-        UTIL_ChangeHookEvent(g_convarList[ConVar_notice_friend_fire], "player_hurt", Event_PlayerHurt);
+        EventUtils.ChangeHook(g_convarList[ConVar_notice_friend_fire], "player_hurt", Event_PlayerHurt);
     }
     else if( ! strcmp(convarName, "sm_notice_fk") )
     {
         g_convarList[ConVar_notice_friend_kill] = convar.BoolValue;
-        UTIL_ChangeHookEvent(g_convarList[ConVar_notice_friend_kill], "player_death", Event_PlayerDeath);
+        EventUtils.ChangeHook(g_convarList[ConVar_notice_friend_kill], "player_death", Event_PlayerDeath);
     }
     else if( ! strcmp(convarName, "sm_notice_fk_rp") )
     {
@@ -356,68 +351,27 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
     else if( ! strcmp(convarName, "sm_notice_keycode_enable") )
     {
         g_convarList[ConVar_notice_keycode] = convar.BoolValue;
-        UTIL_ChangeHookEvent(g_convarList[ConVar_notice_keycode], "keycode_enter", Event_Keycode_Enter);
+        EventUtils.ChangeHook(g_convarList[ConVar_notice_keycode], "keycode_enter", Event_Keycode_Enter);
     }
 }
 
 void LoadHookEvent()
 {
     if( g_convarList[ConVar_notice_friend_fire] )
-        HookEvent("player_hurt", Event_PlayerHurt);
+        EventUtils.ChangeHook(true, "player_hurt", Event_PlayerHurt);
 
     if( g_convarList[ConVar_notice_friend_kill] )
-        HookEvent("player_death", Event_PlayerDeath);
+        EventUtils.ChangeHook(true, "player_death", Event_PlayerDeath);
 
     if( g_convarList[ConVar_notice_keycode] )
-        HookEvent("keycode_enter", Event_Keycode_Enter);
-}
-
-void LoadLateSupport()
-{
-    ClientPrefs_LoadLate();
-}
-
-// ================================== UTIL ===================================
-stock int UTIL_LoadOffsetOrFail(const char[] cls, const char[] prop, PropFieldType &type=view_as<PropFieldType>(0), int &num_bits=0, int &local_offset=0, int &array_size=0)
-{
-    int offset = FindSendPropInfo(cls, prop, type, num_bits, local_offset, array_size);
-    if( offset < 1 )
-        SetFailState("Can't find offset [%s] [%s]", cls, prop);
-    return offset;
-}
-
-// 根据 isHook 执行 HookEvent 或 UnhookEvent
-stock void UTIL_ChangeHookEvent(bool isHook, const char[] name, EventHook callback, EventHookMode mode=EventHookMode_Post)
-{
-    isHook ? HookEvent(name, callback) : UnhookEvent(name, callback);
-}
-
-// 根据 convar 和 clientPrefBit 判断是否输出
-stock void UTIL_CPrintToChatAll(bool convar, int bit, const char[] message, any ...)
-{
-    if( ! convar )
-        return ;
-
-    char formatMessage[512];
-    for( int client=1; client<=MaxClients; ++client )
-    {
-        if( IsClientInGame(client) && ClientPrefs_CanPrint(client, bit) )
-        {
-            VFormat(formatMessage, sizeof(formatMessage), message, 4);
-            CPrintToChat(client, formatMessage);
-        }
-    }
-}
-
-stock bool UTIL_IsValidClient(int client)
-{
-    return client > 0 && client <= MaxClients && IsClientInGame(client);
+        EventUtils.ChangeHook(true, "keycode_enter", Event_Keycode_Enter);
 }
 
 // ================================= Native ==================================
 public void LoadNativeAndForward()
 {
     CreateNative("NMR_Notice_IsBleedingOut",            Native_NMR_Notice_IsBleedingOut);
+    CreateNative("NMR_Notice_IsVaccinated",             Native_NMR_Notice_IsVaccinated);
     CreateNative("NMR_Notice_IsInfected",               Native_NMR_Notice_IsInfected);
     CreateNative("NMR_Notice_GetInfectionTime",         Native_NMR_Notice_GetInfectionTime);
     CreateNative("NMR_Notice_GetInfectionDeathTime",    Native_NMR_Notice_GetInfectionDeathTime);
@@ -432,16 +386,25 @@ public void LoadNativeAndForward()
 public any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! UTIL_IsValidClient(client) )
+    if( ! IsValidClient(client) )
         ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
 
-    return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1) == 1;
+    return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1);
+}
+
+public any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! IsValidClient(client) )
+        ThrowError("NMR_Notice_IsVaccinated %d is invalid client", client);
+
+    return GetEntData(client, g_offsetList[Offset_m_bVaccinated], 1);
 }
 
 public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! UTIL_IsValidClient(client) )
+    if( ! IsValidClient(client) )
         ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
 
     return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]) != -1.0;
@@ -450,7 +413,7 @@ public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
 public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! UTIL_IsValidClient(client) )
+    if( ! IsValidClient(client) )
         ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
 
     return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]);
@@ -459,8 +422,78 @@ public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
 public any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! UTIL_IsValidClient(client) )
+    if( ! IsValidClient(client) )
         ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
 
     return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionDeathTime]);
+}
+
+
+// ================================= Client Prefs ==================================
+void LoadCookie()
+{
+    // 避免需要重复注册, 否则 settings 菜单会有多个选项
+    if( g_cookie.isValid )
+        return ;
+
+    g_cookie = new CookieEx(CLIENT_PREFS_NAME, CLIENT_PREFS_DESCRIPTION, CookieAccess_Private);
+
+    // 如果注册失败, 则不要在 settings 菜单中添加 item
+    if( ! g_cookie.isValid )
+        return ;
+
+    SetCookieMenuItem(CookieMenuHandler, 0, CLIENT_PREFS_MENU_ITEM);
+}
+
+void CookieMenuHandler(int client, CookieMenuAction action, any info, char[] buffer, int maxlen)
+{
+    ShowCookiesMenu(client, 0);
+}
+
+void ShowCookiesMenu(int client, int at=0)
+{
+    if( ! g_cookie.isValid )
+        return ;
+
+    Menu menu = new Menu(PrefsMenuHandler, MenuAction_Select | MenuAction_Cancel);
+    menu.ExitBackButton = true;
+    menu.SetTitle("%T", "Notifice_PrefsMenu_Title", client);
+
+    g_cookie.AddBitItem(client, CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_BLEEDING,    menu,   "Notifice_PrefsMenu_Item_Bleeding");
+    g_cookie.AddBitItem(client, CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_INFECTED,    menu,   "Notifice_PrefsMenu_Item_Infected");
+    g_cookie.AddBitItem(client, CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_FF,          menu,   "Notifice_PrefsMenu_Item_ff");
+    g_cookie.AddBitItem(client, CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_FK,          menu,   "Notifice_PrefsMenu_Item_fk");
+    g_cookie.AddBitItem(client, CLIENT_PREFS_BIT_DEFAULT, CLIENT_PREFS_BIT_SHOW_PASSWD,      menu,   "Notifice_PrefsMenu_Item_passwd");
+
+    menu.DisplayAt(client, at, 30);
+}
+
+int PrefsMenuHandler(Menu menu, MenuAction action, int param1, int param2)
+{
+    switch( action )
+    {
+        case MenuAction_End:
+        {
+            delete menu;
+            if( param1 == MenuEnd_Cancelled && param2 == MenuCancel_ExitBack )
+            {
+                ShowCookieMenu(param1);
+            }
+        }
+        case MenuAction_Select:
+        {
+            // int - bit info
+            char item_info[MAX_CLIENT_PREFS_ITEM_INFO_LEN];
+
+            // 读取选择的 item 的 item info (对应的 bit 位)
+            menu.GetItem(param2, item_info, sizeof(item_info));
+
+            // 翻转选择的 bit, 并存储新值
+            g_cookie.SwitchBitItem(param1, CLIENT_PREFS_BIT_DEFAULT, StringToInt(item_info));
+
+            int at = GetBitItemAtPage( StringToFloat(item_info) );
+            ShowCookiesMenu(param1, at);
+        }
+    }
+    return 0;
 }
