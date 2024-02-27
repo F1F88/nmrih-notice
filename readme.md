@@ -27,11 +27,11 @@
     - Plugin delayed loading supported
     - Supports 'hot swapping' (even without clientprefs, all considered received)
 
-4. Provided **4** items `native` to obtain player status
-    - Specific reference [nmrih-notice.inc](scripting\include\nmrih-notice.inc)
+4. Provided **5** items `native` to obtain player status
+    - Specific reference [nmrih-notice.inc](./scripting/include/nmrih-notice.inc)
 
 5. Provided **4** item `forward` to simplify the process of player infection and bleeding during detours
-    - Specific reference [nmrih-notice.inc](scripting\include\nmrih-notice.inc)
+    - Specific reference [nmrih-notice.inc](./scripting/include/nmrih-notice.inc)
 
 This project is equivalent to an upgraded version
 of [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showthread.php?p=2335718)
@@ -41,6 +41,12 @@ of [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showt
 - [SourceMod 1.12](https://www.sourcemod.net/downloads.php?branch=dev) or higher
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
+
+- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157)
+
+- [log](https://github.com/F1F88/sm-logdebug)
+
+- [sm-includes](https://github.com/F1F88/sm-includes)
 
 - clientprefs (option)
 
