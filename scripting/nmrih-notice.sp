@@ -6,7 +6,7 @@
 #include <dhooks>
 
 #include <clients_methodmap>
-#include <log_native>
+#include <log_methodmap>
 
 #include <utils_initialize>
 #include <utils_events>
@@ -16,7 +16,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "2.2.0"
+#define PLUGIN_VERSION                      "2.2.1"
 
 #define CLIENT_PREFS_NAME                   "NMRIH Notice ClientPrefs"
 #define CLIENT_PREFS_DESCRIPTION            CLIENT_PREFS_NAME
@@ -74,7 +74,7 @@ GlobalForward   g_forwardList[Forward_Total];
 
 any             g_convarList[ConVar_Total];
 
-Log             g_log;
+Logger          g_log;
 
 // =============================== Init ===============================
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -362,7 +362,7 @@ void LoadHookEvent()
 
 void LoadLogDebug()
 {
-    g_log = Log();
+    g_log = Logger.GetLogger("notice", _, "[Notice] ", "nmrih-notice");
 }
 
 // ================================= Native ==================================

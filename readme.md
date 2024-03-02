@@ -44,7 +44,7 @@ of [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showt
 
 - [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157)
 
-- [log](https://github.com/F1F88/sm-logdebug)
+- [log_methodmap](https://github.com/F1F88/sm-logdebug)
 
 - [sm-includes](https://github.com/F1F88/sm-includes)
 
