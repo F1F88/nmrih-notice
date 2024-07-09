@@ -35,19 +35,19 @@
 
 此项目相当于 [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showthread.php?p=2335718) 的升级版
 
+警告：此插件不再支持 windows 平台，如果想 windows 平台使用，你需要更新 [nmrih-notice.games.txt](./gamedata/nmrih-notice.games.txt) 的签名
+
 ## 依赖
 
-- [SourceMod 1.12](https://www.sourcemod.net/downloads.php?branch=dev) 或更高版本
+- [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) 或更高版本
 
-- [multicolors](https://github.com/Bara/Multi-Colors)
+- [multicolors](https://github.com/Bara/Multi-Colors) (utils_clientprefs.inc 依赖于此)
 
-- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157)
+- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157) (只需要其中的 IsValidClient)
 
 - [log_methodmap](https://github.com/F1F88/sm-logdebug)
 
-- [sm-includes](https://github.com/F1F88/sm-includes)
-
-- clientprefs 插件拓展（可选）
+- 插件 clientprefs.smx（可选）
 
 ## 使用方法
 

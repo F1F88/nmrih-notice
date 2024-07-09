@@ -36,19 +36,19 @@
 This project is equivalent to an upgraded version
 of [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showthread.php?p=2335718)
 
+Warning: This plugin is no longer supported on windows, you need to update the signature of [nmrih-notice.games.txt](./gamedata/nmrih-notice.games.txt) if you want to use it on windows
+
 ## Requirements
 
-- [SourceMod 1.12](https://www.sourcemod.net/downloads.php?branch=dev) or higher
+- [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) or higher
 
-- [multicolors](https://github.com/Bara/Multi-Colors)
+- [multicolors](https://github.com/Bara/Multi-Colors) (utils_clientprefs.inc need)
 
-- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157)
+- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157) (Only Need IsValidClient)
 
 - [log_methodmap](https://github.com/F1F88/sm-logdebug)
 
-- [sm-includes](https://github.com/F1F88/sm-includes)
-
-- clientprefs (option)
+- plugin clientprefs.smx (option)
 
 ## Installation
 
