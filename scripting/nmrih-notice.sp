@@ -16,7 +16,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "2.2.1"
+#define PLUGIN_VERSION                      "2.2.2"
 
 #define CLIENT_PREFS_NAME                   "NMRIH Notice ClientPrefs"
 #define CLIENT_PREFS_DESCRIPTION            CLIENT_PREFS_NAME
@@ -105,8 +105,9 @@ public void OnPluginStart()
 
 // =============================== Detour ===============================
 // 玩家开始流血
-MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam params)
+MRESReturn Detour_CNMRiH_Player_BleedOut(DHookParam params)
 {
+    int client = params.Get(0);
     g_log.Debug("Client %d-'%N' Start BleedOut", client, client);
 
     Action result;
@@ -127,8 +128,9 @@ MRESReturn Detour_CNMRiH_Player_BleedOut(int client, DHookReturn ret, DHookParam
 // Note3: 使用 绷带、医疗包 后会连续触发两次
 // Note4: 使用 医疗箱治疗后 只会触发一次
 // Note5: 玩家 撤离后 只会触发一次
-MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHookParam params)
+MRESReturn Detour_CNMRiH_Player_StopBleedingOut(DHookParam params)
 {
+    int client = params.Get(0);
     g_log.Debug("Client %d-'%N' Stop BleedOut", client, client);
 
     Action result;
@@ -143,8 +145,9 @@ MRESReturn Detour_CNMRiH_Player_StopBleedingOut(int client, DHookReturn ret, DHo
 
 // 玩家开始感染
 // Note1: 即使已注射疫苗仍会触发此绕行
-MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHookParam params)
+MRESReturn Detour_CNMRiH_Player_BecomeInfected(DHookParam params)
 {
+    int client = params.Get(0);
     g_log.Debug("Client %d-'%N' Become Infecte", client, client);
 
     Action result;
@@ -164,8 +167,9 @@ MRESReturn Detour_CNMRiH_Player_BecomeInfected(int client, DHookReturn ret, DHoo
 // Note1: 死亡不会触发
 // Note2: 复活会连续触发两次
 // Note3: 使用 疫苗 后只会触发一次
-MRESReturn Detour_CNMRiH_Player_CureInfection(int client, DHookReturn ret, DHookParam params)
+MRESReturn Detour_CNMRiH_Player_CureInfection(DHookParam params)
 {
+    int client = params.Get(0);
     g_log.Debug("Client %d-'%N' Cure Infecte", client, client);
 
     Action result;
