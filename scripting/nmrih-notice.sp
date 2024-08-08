@@ -4,8 +4,6 @@
 #include <sourcemod>
 #include <dhooks>
 
-#include <log_methodmap>
-
 #include <utils_initialize>
 #include <utils_events>
 #include <utils_clientprefs>
@@ -72,8 +70,6 @@ GlobalForward   g_forwardList[Forward_Total];
 
 any             g_convarList[ConVar_Total];
 
-Logger          g_log;
-
 // =============================== Init ===============================
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -97,8 +93,6 @@ public void OnPluginStart()
     LoadGameData();                         // 加载需要绕行的函数
 
     LoadHookEvent();                        // 加载监听事件
-
-    LoadLogDebug();                         // 加载日志框架
 }
 
 // =============================== Detour ===============================
@@ -106,7 +100,6 @@ public void OnPluginStart()
 MRESReturn Detour_CNMRiH_Player_BleedOut(DHookParam params)
 {
     int client = params.Get(0);
-    g_log.Debug("Client %d-'%N' Start BleedOut", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_bleedOut]);
@@ -129,7 +122,6 @@ MRESReturn Detour_CNMRiH_Player_BleedOut(DHookParam params)
 MRESReturn Detour_CNMRiH_Player_StopBleedingOut(DHookParam params)
 {
     int client = params.Get(0);
-    g_log.Debug("Client %d-'%N' Stop BleedOut", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_stopBleedingOut]);
@@ -146,7 +138,6 @@ MRESReturn Detour_CNMRiH_Player_StopBleedingOut(DHookParam params)
 MRESReturn Detour_CNMRiH_Player_BecomeInfected(DHookParam params)
 {
     int client = params.Get(0);
-    g_log.Debug("Client %d-'%N' Become Infecte", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_becomeInfected]);
@@ -168,7 +159,6 @@ MRESReturn Detour_CNMRiH_Player_BecomeInfected(DHookParam params)
 MRESReturn Detour_CNMRiH_Player_CureInfection(DHookParam params)
 {
     int client = params.Get(0);
-    g_log.Debug("Client %d-'%N' Cure Infecte", client, client);
 
     Action result;
     Call_StartForward(g_forwardList[Forward_cureInfection]);
@@ -190,8 +180,6 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
     if( victim == attacker || ! IsValidClient(attacker) || ! IsValidClient(victim) )
         return ;
-
-    g_log.Info("Client %d-'%N' was attacked by Client %d-'%N' ", victim, victim, attacker, attacker);
 
     // prevent flood
     float currentTime = GetGameTime();
@@ -215,8 +203,6 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
     if( attacker == victim || ! IsValidClient(attacker) )
         return ;
 
-    g_log.Info("Client %d-'%N' was killed by Client %d-'%N' ", victim, victim, attacker, attacker);
-
     g_cookie.CPrintToChatAllExII(NMR_NOTICE_CLIENT_PREFS_BIT_DEFAULT, NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_FK, "Notifice_Kill", attacker, victim);
 
     if( g_convarList[ConVar_notice_friend_kill_report] )
@@ -235,8 +221,6 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 
     event.GetString("code", enterCode, sizeof(enterCode));
     GetEntPropString(keypad, Prop_Data, "m_pszCode", correctCode, sizeof(correctCode));
-
-    g_log.Debug("Client %d-'%N' enter code '%s' | correct code '%s'", client, client, enterCode, correctCode);
 
     if( ! strcmp(enterCode, correctCode) )
     {
@@ -360,11 +344,6 @@ void LoadHookEvent()
 
     if( g_convarList[ConVar_notice_keycode] )
         EventUtils.ChangeHook(true, "keycode_enter", Event_Keycode_Enter);
-}
-
-void LoadLogDebug()
-{
-    g_log = Logger.GetLogger("notice", _, "[Notice] ", "nmrih-notice");
 }
 
 // ================================= Native ==================================
