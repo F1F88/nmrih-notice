@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.1"
+#define PLUGIN_VERSION                      "3.0.2"
 
 public Plugin myinfo =
 {
@@ -189,12 +189,12 @@ public void OnPluginStart()
 
     if (g_convarList[ConVar_notice_friend_kill])
     {
-        HookEvent("player_death", Event_PlayerHurt);
+        HookEvent("player_death", Event_PlayerDeath);
     }
 
     if (g_convarList[ConVar_notice_keycode])
     {
-        HookEvent("keycode_enter", Event_PlayerHurt);
+        HookEvent("keycode_enter", Event_Keycode_Enter);
     }
 }
 
