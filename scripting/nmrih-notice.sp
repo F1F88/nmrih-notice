@@ -2,7 +2,6 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <sdktools>
 #include <dhooks>
 
 #include <clients_methodmap>
