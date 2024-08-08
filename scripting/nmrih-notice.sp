@@ -5,7 +5,6 @@
 #include <dhooks>
 
 #include <utils_initialize>
-#include <utils_events>
 #include <utils_clientprefs>
 
 #include <nmrih-notice>
@@ -312,12 +311,26 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
     else if( ! strcmp(convarName, "sm_notice_ff") )
     {
         g_convarList[ConVar_notice_friend_fire] = convar.BoolValue;
-        EventUtils.ChangeHook(g_convarList[ConVar_notice_friend_fire], "player_hurt", Event_PlayerHurt);
+        if (convar.BoolValue)
+        {
+            HookEvent("player_hurt", Event_PlayerHurt);
+        }
+        else
+        {
+            UnhookEvent("player_hurt", Event_PlayerHurt);
+        }
     }
     else if( ! strcmp(convarName, "sm_notice_fk") )
     {
         g_convarList[ConVar_notice_friend_kill] = convar.BoolValue;
-        EventUtils.ChangeHook(g_convarList[ConVar_notice_friend_kill], "player_death", Event_PlayerDeath);
+        if (convar.BoolValue)
+        {
+            HookEvent("player_death", Event_PlayerDeath);
+        }
+        else
+        {
+            UnhookEvent("player_death", Event_PlayerDeath);
+        }
     }
     else if( ! strcmp(convarName, "sm_notice_fk_rp") )
     {
@@ -330,20 +343,27 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
     else if( ! strcmp(convarName, "sm_notice_keycode_enable") )
     {
         g_convarList[ConVar_notice_keycode] = convar.BoolValue;
-        EventUtils.ChangeHook(g_convarList[ConVar_notice_keycode], "keycode_enter", Event_Keycode_Enter);
+        if (convar.BoolValue)
+        {
+            HookEvent("keycode_enter", Event_Keycode_Enter);
+        }
+        else
+        {
+            UnhookEvent("keycode_enter", Event_Keycode_Enter);
+        }
     }
 }
 
 void LoadHookEvent()
 {
     if( g_convarList[ConVar_notice_friend_fire] )
-        EventUtils.ChangeHook(true, "player_hurt", Event_PlayerHurt);
+        HookEvent("player_hurt", Event_PlayerHurt);
 
     if( g_convarList[ConVar_notice_friend_kill] )
-        EventUtils.ChangeHook(true, "player_death", Event_PlayerDeath);
+        HookEvent("player_death", Event_PlayerDeath);
 
     if( g_convarList[ConVar_notice_keycode] )
-        EventUtils.ChangeHook(true, "keycode_enter", Event_Keycode_Enter);
+        HookEvent("keycode_enter", Event_Keycode_Enter);
 }
 
 // ================================= Native ==================================
