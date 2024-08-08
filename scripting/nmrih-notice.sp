@@ -4,7 +4,6 @@
 #include <sourcemod>
 #include <dhooks>
 
-#include <clients_methodmap>
 #include <log_methodmap>
 
 #include <utils_initialize>
@@ -429,6 +428,12 @@ public any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
     return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionDeathTime]);
 }
 
+// ================================= Stock =================================
+#if !defined _gremulock_clients_methodmap_included_
+stock bool IsValidClient(int client) {
+    return client > 0 && client <= MaxClients && IsClientInGame(client);
+}
+#endif
 
 // ================================= Client Prefs ==================================
 public void OnAllPluginsLoaded()
