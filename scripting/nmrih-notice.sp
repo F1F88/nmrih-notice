@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.0"
+#define PLUGIN_VERSION                      "3.0.1"
 
 public Plugin myinfo =
 {
@@ -334,7 +334,7 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
             continue;
         }
 
-        CPrintToChat(i, "Notifice_Attacked", attacker, victim);
+        CPrintToChat(i, "%t", "Notifice_Attacked", attacker, victim);
     }
 }
 
@@ -361,7 +361,7 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
             continue;
         }
 
-        CPrintToChat(i, "Notifice_Kill", attacker, victim);
+        CPrintToChat(i, "%t", "Notifice_Kill", attacker, victim);
     }
 
     if( g_convarList[ConVar_notice_friend_kill_report] )
@@ -389,7 +389,7 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
                 continue;
             }
 
-            CPrintToChat(i, "Notifice_InputCorrectCode", client, enterCode);
+            CPrintToChat(i, "%t", "Notifice_InputCorrectCode", client, enterCode);
         }
     }
     else
@@ -401,7 +401,7 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
                 continue;
             }
 
-            CPrintToChat(i, "Notifice_InputIncorrectCode", client, enterCode);
+            CPrintToChat(i, "%t", "Notifice_InputIncorrectCode", client, enterCode);
         }
     }
 }
@@ -416,7 +416,7 @@ public Action NMR_Notice_OnPlayerBleedOut(int client)
             continue;
         }
 
-        CPrintToChat(i, "Notifice_Bleeding", client);
+        CPrintToChat(i, "%t", "Notifice_Bleeding", client);
     }
 
     return Plugin_Continue;
@@ -425,7 +425,7 @@ public Action NMR_Notice_OnPlayerBleedOut(int client)
 // 提醒感染
 public Action NMR_Notice_OnPlayerBecomeInfected(int client)
 {
-    if (!NMR_Notice_IsVaccinated(client)) // 保险起见
+    if (NMR_Notice_IsVaccinated(client)) // 保险起见
     {
         return Plugin_Continue;
     }
@@ -437,7 +437,7 @@ public Action NMR_Notice_OnPlayerBecomeInfected(int client)
             continue;
         }
 
-        CPrintToChat(i, "Notifice_Infection", client);
+        CPrintToChat(i, "%t", "Notifice_Infection", client);
     }
 
     return Plugin_Continue;
