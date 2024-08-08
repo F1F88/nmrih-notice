@@ -90,14 +90,3 @@ forward Action NMR_Notice_OnPlayerBecomeInfected(int client);
  * @return              Plugin_Handled or Plugin_Stop to skip real function.
  */
 forward Action NMR_Notice_OnPlayerCureInfection(int client);
-
-
-
-#define NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_BLEEDING   (1 << 0)
-#define NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_INFECTED   (1 << 1)
-#define NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_FF         (1 << 2)
-#define NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_FK         (1 << 3)
-#define NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_PASSWD     (1 << 4)
-#define NMR_NOTICE_CLIENT_PREFS_BIT_ALL             NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_BLEEDING | NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_INFECTED | \
-                                                    NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_FF | NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_FK | NMR_NOTICE_CLIENT_PREFS_BIT_SHOW_PASSWD
-#define NMR_NOTICE_CLIENT_PREFS_BIT_DEFAULT         NMR_NOTICE_CLIENT_PREFS_BIT_ALL
