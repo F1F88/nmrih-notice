@@ -4,7 +4,6 @@
 #include <sourcemod>
 #include <dhooks>
 
-#include <utils_initialize>
 #include <utils_clientprefs>
 
 #include <nmrih-notice>
@@ -74,7 +73,30 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
     Util_MarkClientPrefsNativeAsOptional();     // 客户偏好 - 标记函数为可选
 
-    LoadOffset();                               // 加载类的属性的偏移量
+    // Load Offset
+    g_offsetList[Offset_m_bIsBleedingOut] = FindSendPropInfo("CNMRiH_Player", "_bleedingOut");
+    if (g_offsetList[Offset_m_bIsBleedingOut] < 1)
+    {
+        SetFailState("Can't find offset CNMRiH_Player::_bleedingOut");
+    }
+
+    g_offsetList[Offset_m_bVaccinated] = FindSendPropInfo("CNMRiH_Player", "_vaccinated");
+    if (g_offsetList[Offset_m_bVaccinated] < 1)
+    {
+        SetFailState("Can't find offset CNMRiH_Player::_vaccinated");
+    }
+
+    g_offsetList[Offset_m_flInfectionTime] = FindSendPropInfo("CNMRiH_Player", "m_flInfectionTime");
+    if (g_offsetList[Offset_m_flInfectionTime] < 1)
+    {
+        SetFailState("Can't find offset CNMRiH_Player::m_flInfectionTime");
+    }
+
+    g_offsetList[Offset_m_flInfectionDeathTime] = FindSendPropInfo("CNMRiH_Player", "m_flInfectionDeathTime");
+    if (g_offsetList[Offset_m_flInfectionDeathTime] < 1)
+    {
+        SetFailState("Can't find offset CNMRiH_Player::m_flInfectionDeathTime");
+    }
 
     LoadNativeAndForward();                     // 提供外部 native 和 forward
 
@@ -232,13 +254,6 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 }
 
 // =================================== Init ====================================
-void LoadOffset()
-{
-    g_offsetList[Offset_m_bIsBleedingOut]       = UTIL_LoadOffsetOrFail("CNMRiH_Player", "_bleedingOut");
-    g_offsetList[Offset_m_bVaccinated]          = UTIL_LoadOffsetOrFail("CNMRiH_Player", "_vaccinated");
-    g_offsetList[Offset_m_flInfectionTime]      = UTIL_LoadOffsetOrFail("CNMRiH_Player", "m_flInfectionTime");
-    g_offsetList[Offset_m_flInfectionDeathTime] = UTIL_LoadOffsetOrFail("CNMRiH_Player", "m_flInfectionDeathTime");
-}
 
 void LoadGameData()
 {
