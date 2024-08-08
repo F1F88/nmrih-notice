@@ -41,11 +41,7 @@
 
 - [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) 或更高版本
 
-- [multicolors](https://github.com/Bara/Multi-Colors) (utils_clientprefs.inc 依赖于此)
-
-- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157) (只需要其中的 IsValidClient)
-
-- [log_methodmap](https://github.com/F1F88/sm-logdebug)
+- [multicolors](https://github.com/Bara/Multi-Colors)
 
 - 插件 clientprefs.smx（可选）
 

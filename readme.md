@@ -42,11 +42,7 @@ Warning: This plugin is no longer supported on windows, you need to update the s
 
 - [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) or higher
 
-- [multicolors](https://github.com/Bara/Multi-Colors) (utils_clientprefs.inc need)
-
-- [clients_methodmap](https://forums.alliedmods.net/showthread.php?t=307157) (Only Need IsValidClient)
-
-- [log_methodmap](https://github.com/F1F88/sm-logdebug)
+- [multicolors](https://github.com/Bara/Multi-Colors)
 
 - plugin clientprefs.smx (option)
 
