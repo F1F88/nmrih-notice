@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.3"
+#define PLUGIN_VERSION                      "3.0.4"
 
 public Plugin myinfo =
 {
@@ -363,6 +363,11 @@ stock bool IsValidClient(int client) {
 // 感染玩家被攻击通知
 public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
+    if (!g_convarList[ConVar_notice_friend_fire])
+    {
+        return;
+    }
+
     int victim = GetClientOfUserId(event.GetInt("userid"));
     int attacker = GetClientOfUserId(event.GetInt("attacker"));
     if (attacker == victim || !IsValidClient(attacker) || !IsValidClient(victim))
@@ -393,6 +398,11 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 // 死亡通知
 public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
+    if (!g_convarList[ConVar_notice_friend_kill])
+    {
+        return;
+    }
+
     int npc = event.GetInt("npctype");
     if (npc != 0)
     {
@@ -425,6 +435,11 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 // 显示输入的密码
 public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 {
+    if (!g_convarList[ConVar_notice_keycode])
+    {
+        return;
+    }
+
     char enterCode[16], correctCode[16];
     int client = event.GetInt("player");
     int keypad = event.GetInt("keypad_idx");
@@ -461,6 +476,11 @@ public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 // 提醒流血
 public Action NMR_Notice_OnPlayerBleedOut(int client)
 {
+    if (!g_convarList[ConVar_notice_bleeding])
+    {
+        return ;
+    }
+
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (!IsClientInGame(i) || !CheckPrefsBit(i, BIT_SHOW_BLEEDING))
@@ -477,6 +497,11 @@ public Action NMR_Notice_OnPlayerBleedOut(int client)
 // 提醒感染
 public Action NMR_Notice_OnPlayerBecomeInfected(int client)
 {
+    if (!g_convarList[ConVar_notice_infected])
+    {
+        return ;
+    }
+
     if (NMR_Notice_IsVaccinated(client)) // 保险起见
     {
         return Plugin_Continue;
