@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.2"
+#define PLUGIN_VERSION                      "3.0.3"
 
 public Plugin myinfo =
 {
@@ -236,6 +236,52 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
     }
 }
 
+// ================================= Natives ==================================
+public any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! IsValidClient(client) )
+        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
+
+    return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1);
+}
+
+public any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! IsValidClient(client) )
+        ThrowError("NMR_Notice_IsVaccinated %d is invalid client", client);
+
+    return GetEntData(client, g_offsetList[Offset_m_bVaccinated], 1);
+}
+
+public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! IsValidClient(client) )
+        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
+
+    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]) != -1.0;
+}
+
+public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! IsValidClient(client) )
+        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
+
+    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]);
+}
+
+public any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
+{
+    int client = GetNativeCell(1);
+    if( ! IsValidClient(client) )
+        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
+
+    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionDeathTime]);
+}
+
 // =============================== Detour ===============================
 // 玩家开始流血
 MRESReturn Detour_CNMRiH_Player_BleedOut(DHookParam params)
@@ -306,8 +352,14 @@ MRESReturn Detour_CNMRiH_Player_CureInfection(DHookParam params)
     return MRES_Ignored;
 }
 
+// ================================= Stock =================================
+#if !defined _gremulock_clients_methodmap_included_
+stock bool IsValidClient(int client) {
+    return client > 0 && client <= MaxClients && IsClientInGame(client);
+}
+#endif
 
-// =============================== Event CallBack ===============================
+// =============================== Notifice ===============================
 // 感染玩家被攻击通知
 public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
@@ -442,59 +494,6 @@ public Action NMR_Notice_OnPlayerBecomeInfected(int client)
 
     return Plugin_Continue;
 }
-
-// ================================= Native ==================================
-public any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
-
-    return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1);
-}
-
-public any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsVaccinated %d is invalid client", client);
-
-    return GetEntData(client, g_offsetList[Offset_m_bVaccinated], 1);
-}
-
-public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
-
-    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]) != -1.0;
-}
-
-public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
-
-    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]);
-}
-
-public any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
-
-    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionDeathTime]);
-}
-
-// ================================= Stock =================================
-#if !defined _gremulock_clients_methodmap_included_
-stock bool IsValidClient(int client) {
-    return client > 0 && client <= MaxClients && IsClientInGame(client);
-}
-#endif
 
 // ================================= Client Prefs ==================================
 public void OnLibraryRemoved(const char[] name)
