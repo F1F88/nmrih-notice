@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.5"
+#define PLUGIN_VERSION                      "3.0.6"
 
 public Plugin myinfo =
 {
@@ -196,7 +196,7 @@ public void OnPluginStart()
     LoadCookie();
 }
 
-public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
+void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
     char name[64];
     convar.GetName(name, sizeof(name));
@@ -235,7 +235,7 @@ public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] ne
 }
 
 // ================================= Natives ==================================
-public any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
+any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
     if( ! IsValidClient(client) )
@@ -244,7 +244,7 @@ public any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
     return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1);
 }
 
-public any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
+any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
     if( ! IsValidClient(client) )
@@ -253,7 +253,7 @@ public any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
     return GetEntData(client, g_offsetList[Offset_m_bVaccinated], 1);
 }
 
-public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
+any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
     if( ! IsValidClient(client) )
@@ -262,7 +262,7 @@ public any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
     return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]) != -1.0;
 }
 
-public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
+any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
     if( ! IsValidClient(client) )
@@ -271,7 +271,7 @@ public any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
     return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]);
 }
 
-public any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
+any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
     if( ! IsValidClient(client) )
@@ -359,7 +359,7 @@ stock bool IsValidClient(int client) {
 
 // =============================== Notifice ===============================
 // 感染玩家被攻击通知
-public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
+void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
     if (!g_convarList[ConVar_notice_friend_fire])
     {
@@ -394,7 +394,7 @@ public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 }
 
 // 死亡通知
-public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
+void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
     if (!g_convarList[ConVar_notice_friend_kill])
     {
@@ -431,7 +431,7 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
 }
 
 // 显示输入的密码
-public void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
+void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 {
     if (!g_convarList[ConVar_notice_keycode])
     {
