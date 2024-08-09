@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.4"
+#define PLUGIN_VERSION                      "3.0.5"
 
 public Plugin myinfo =
 {
@@ -79,11 +79,6 @@ any             g_convarList[ConVar_Total];
 // =============================== Init ===============================
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    MarkNativeAsOptional("Cookie.Cookie");
-    MarkNativeAsOptional("Cookie.Get");
-    MarkNativeAsOptional("Cookie.Set");
-    MarkNativeAsOptional("SetCookieMenuItem");
-
     // Load Offset
     g_offsetList[Offset_m_bIsBleedingOut] = FindSendPropInfo("CNMRiH_Player", "_bleedingOut");
     if (g_offsetList[Offset_m_bIsBleedingOut] < 1)
@@ -196,6 +191,9 @@ public void OnPluginStart()
     {
         HookEvent("keycode_enter", Event_Keycode_Enter);
     }
+
+    // Client prefs
+    LoadCookie();
 }
 
 public void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -521,30 +519,6 @@ public Action NMR_Notice_OnPlayerBecomeInfected(int client)
 }
 
 // ================================= Client Prefs ==================================
-public void OnLibraryRemoved(const char[] name)
-{
-    if (StrEqual("clientprefs", name, false))
-    {
-        RemoveCookie();
-    }
-}
-
-void RemoveCookie()
-{
-    if (g_cookie != null)
-    {
-        delete g_cookie;
-    }
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-    if (StrEqual("clientprefs", name, false))
-    {
-        LoadCookie();
-    }
-}
-
 void LoadCookie()
 {
     g_cookie = new Cookie("NMRIH Notice ClientPrefs", "NMRIH Notice ClientPrefs", CookieAccess_Private);
