@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.6"
+#define PLUGIN_VERSION                      "3.0.7"
 
 public Plugin myinfo =
 {
@@ -500,7 +500,7 @@ public Action NMR_Notice_OnPlayerBecomeInfected(int client)
         return Plugin_Continue;
     }
 
-    if (NMR_Notice_IsVaccinated(client)) // 保险起见
+    if (!IsValidClient(client) || NMR_Notice_IsVaccinated(client)) // 保险起见
     {
         return Plugin_Continue;
     }
