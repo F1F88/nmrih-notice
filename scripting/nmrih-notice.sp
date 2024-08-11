@@ -12,7 +12,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.7"
+#define PLUGIN_VERSION                      "3.0.8"
 
 public Plugin myinfo =
 {
@@ -602,11 +602,10 @@ int PrefsMenuHandler(Menu menu, MenuAction action, int param1, int param2)
             char info[16];
             menu.GetItem(option, info, sizeof(info));
 
-            char oldValue[16];
-            g_cookie.Get(client, oldValue, sizeof(oldValue));
+            int reverseBit = StringToInt(info);
 
             char newValue[16];
-            IntToString(StringToInt(info) ^ StringToInt(oldValue), newValue, sizeof(newValue));
+            IntToString(reverseBit ^ GetCookieValue(client), newValue, sizeof(newValue));
 
             g_cookie.Set(client, newValue);
 
@@ -620,13 +619,28 @@ int PrefsMenuHandler(Menu menu, MenuAction action, int param1, int param2)
 
 bool CheckPrefsBit(int client, int prefsBit)
 {
+    return (GetCookieValue(client) & prefsBit) != 0;
+}
+
+int GetCookieValue(int client)
+{
     if (!LibraryExists("clientprefs") || g_cookie == null)
     {
-        return true;
+        return BIT_DEFAULT;
     }
 
     char buffer[16];
     g_cookie.Get(client, buffer, sizeof(buffer));
+    if (!buffer[0])
+    {
+        return BIT_DEFAULT;
+    }
 
-    return (StringToInt(buffer) & prefsBit) != 0;
+    int value;
+    if (!StringToIntEx(buffer, value))
+    {
+        return BIT_DEFAULT;
+    }
+
+    return value;
 }
