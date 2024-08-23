@@ -11,7 +11,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Notifice the player when something happens in the game"
-#define PLUGIN_VERSION                      "4.5.1"
+#define PLUGIN_VERSION                      "4.5.2"
 
 public Plugin myinfo =
 {
@@ -136,7 +136,7 @@ void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
 
 // =============================== Notifice ===============================
 // 玩家开始流血
-public void OnPlayerBleedOutPost(int client)
+public void OnPlayerBleedOutPost(int client) // nmrih_player api
 {
     if (g_cv[CV_bleedout] && Player(client)._bleedingOut)
     {
@@ -153,15 +153,23 @@ public void OnPlayerBleedOutPost(int client)
 // 玩家开始感染
 Action UserMsg_BecameInfected(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
 {
-    int client = players[0];
-    for (int i = 1; i <= MaxClients; ++i)
+    RequestFrame(Frame_NotificePlayerBecameInfected, GetClientUserId(players[0]));
+    return Plugin_Continue;
+}
+
+void Frame_NotificePlayerBecameInfected(int userid)
+{
+    int client = GetClientOfUserId(userid);
+    if (IsValidClient(client))
     {
-        if (IsClientInGame(i) && CheckPrefsBit(i, BIT_SHOW_INFECTED))
+        for (int i = 1; i <= MaxClients; ++i)
         {
-            CPrintToChat(i, "%t", "Notifice_Infection", client);
+            if (IsClientInGame(i) && CheckPrefsBit(i, BIT_SHOW_INFECTED))
+            {
+                CPrintToChat(i, "%t", "Notifice_Infection", client);
+            }
         }
     }
-    return Plugin_Continue;
 }
 
 // 感染玩家被队友攻击
