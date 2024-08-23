@@ -11,7 +11,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Notifice the player when something happens in the game"
-#define PLUGIN_VERSION                      "4.5.0"
+#define PLUGIN_VERSION                      "4.5.1"
 
 public Plugin myinfo =
 {
@@ -136,9 +136,9 @@ void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
 
 // =============================== Notifice ===============================
 // 玩家开始流血
-public void NMR_OnPlayerBleedOutPost(int client)
+public void OnPlayerBleedOutPost(int client)
 {
-    if (g_cv[CV_bleedout] && NMR_Player(client)._bleedingOut)
+    if (g_cv[CV_bleedout] && Player(client)._bleedingOut)
     {
         for (int i = 1; i <= MaxClients; ++i)
         {
