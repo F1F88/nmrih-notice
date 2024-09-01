@@ -15,27 +15,15 @@
 
    | ConVar                  | 默认值 | 描述            |
    |-------------------------|-----|---------------|
-   | sm_notice_bleeding      | 1   | 在聊天框提示玩家流血    |
-   | sm_notice_infected      | 1   | 在聊天框提示玩家感染    |
+   | sm_notice_bleedout      | 1   | 在聊天框提示玩家流血    |
+   | sm_notice_became_infected      | 1   | 在聊天框提示玩家感染    |
    | sm_notice_ff            | 1   | 在聊天框提示队友攻击    |
    | sm_notice_fk            | 1   | 在聊天框提示队友击杀    |
    | sm_notice_fk_rp         | 0   | 在聊天框提示队友击杀如何举报 |
    | sm_notice_ffmsg_interval | 1.0 | 每条友伤提醒最短间隔（秒） |
    | sm_notice_keycode       | 1   | 在聊天框提示键盘输入的密码 |
 
-3. 支持 `clientprefs`，玩家可以在游戏里使用 `!settings` 控制在 `(1)` 中的哪些情况下接收提醒
-    - 已支持插件延迟加载
-    - 已支持 "热插拔" （即使卸载 clientprefs 插件也不影响运行, 默认客户全部接收）
-
-4. 提供了 **5** 项 `native` 供其他插件获取玩家状态
-    - 具体参考 [nmrih-notice.inc](./scripting/include/nmrih-notice.inc)
-
-5. 提供了 **4** 项 `forward` 供其他插件绕行玩家感染、流血
-    - 具体参考 [nmrih-notice.inc](./scripting/include/nmrih-notice.inc)
-
-此项目相当于 [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showthread.php?p=2335718) 的升级版
-
-警告：此插件不再支持 windows 平台，如果想 windows 平台使用，你需要更新 [nmrih-notice.games.txt](./gamedata/nmrih-notice.games.txt) 的签名
+此插件相当于 [[NMRiH] Infection/Bledding Notification](https://forums.alliedmods.net/showthread.php?p=2335718) 的升级版 (占用性能更少)
 
 ## 依赖
 
@@ -43,7 +31,7 @@
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
 
-- 插件 clientprefs.smx（可选）
+- 插件 nmrih_player.smx
 
 ## 使用方法
 
