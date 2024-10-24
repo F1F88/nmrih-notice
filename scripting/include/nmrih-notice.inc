@@ -12,6 +12,7 @@
  * @return              Return True when the client is bleeding, otherwise return False.
  * @error               Invalid client index.
  */
+#pragma deprecated Use nmrih_player utils.
 native bool NMR_Notice_IsBleedingOut(int client);
 
 /**
@@ -21,6 +22,7 @@ native bool NMR_Notice_IsBleedingOut(int client);
  * @return              Return True when the client is vaccinated, otherwise return False.
  * @error               Invalid client index.
  */
+#pragma deprecated Use nmrih_player utils.
 native bool NMR_Notice_IsVaccinated(int client);
 
 /**
@@ -30,6 +32,7 @@ native bool NMR_Notice_IsVaccinated(int client);
  * @return              Return True when the client is infected, otherwise return False.
  * @error               Invalid client index.
  */
+#pragma deprecated Use nmrih_player utils.
 native bool NMR_Notice_IsInfected(int client);
 
 /**
@@ -39,6 +42,7 @@ native bool NMR_Notice_IsInfected(int client);
  * @return              Return the client Infection Time.
  * @error               Invalid client index.
  */
+#pragma deprecated Use nmrih_player utils.
 native float NMR_Notice_GetInfectionTime(int client);
 
 /**
@@ -48,6 +52,7 @@ native float NMR_Notice_GetInfectionTime(int client);
  * @return              Return the client Infection Death Time.
  * @error               Invalid client index.
  */
+#pragma deprecated Use nmrih_player utils.
 native float NMR_Notice_GetInfectionDeathTime(int client);
 
 
@@ -57,6 +62,7 @@ native float NMR_Notice_GetInfectionDeathTime(int client);
  * @param client        Entity index of the bleed out client.
  * @return              Plugin_Handled or Plugin_Stop to skip real function.
  */
+#pragma deprecated Use nmrih_player utils.
 forward Action NMR_Notice_OnPlayerBleedOut(int client);
 
 /**
@@ -70,6 +76,7 @@ forward Action NMR_Notice_OnPlayerBleedOut(int client);
  * @param client        Entity index of the bleed out client.
  * @return              Plugin_Handled or Plugin_Stop to skip real function.
  */
+#pragma deprecated Use nmrih_player utils.
 forward Action NMR_Notice_OnPlayerStopBleedingOut(int client);
 
 /**
@@ -78,6 +85,7 @@ forward Action NMR_Notice_OnPlayerStopBleedingOut(int client);
  * @param client        Entity index of the bleed out client.
  * @return              Plugin_Handled or Plugin_Stop to skip real function.
  */
+#pragma deprecated Use nmrih_player utils.
 forward Action NMR_Notice_OnPlayerBecomeInfected(int client);
 
 /**
@@ -89,4 +97,5 @@ forward Action NMR_Notice_OnPlayerBecomeInfected(int client);
  * @param client        Entity index of the bleed out client.
  * @return              Plugin_Handled or Plugin_Stop to skip real function.
  */
+#pragma deprecated Use nmrih_player utils.
 forward Action NMR_Notice_OnPlayerCureInfection(int client);

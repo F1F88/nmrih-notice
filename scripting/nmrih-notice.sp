@@ -3,6 +3,7 @@
 #include <clientprefs>
 
 #include <multicolors>
+#include <nmrih_player>
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -23,8 +24,9 @@ public Plugin myinfo =
     url         = "https://github.com/F1F88/nmrih-notice"
 };
 
-
+#if !defined NMR_MAXPLAYERS
 #define NMR_MAXPLAYERS                      9
+#endif
 
 #define BIT_SHOW_BLEEDING                   (1 << 0)
 #define BIT_SHOW_INFECTED                   (1 << 1)
@@ -34,16 +36,6 @@ public Plugin myinfo =
 #define BIT_ALL                             BIT_SHOW_BLEEDING | BIT_SHOW_INFECTED | BIT_SHOW_FF | BIT_SHOW_FK | BIT_SHOW_PASSWD
 #define BIT_DEFAULT                         BIT_ALL
 
-
-enum
-{
-    Offset_m_bIsBleedingOut,
-    Offset_m_bVaccinated,
-    Offset_m_flInfectionTime,
-    Offset_m_flInfectionDeathTime,
-
-    Offset_Total
-}
 
 enum
 {
@@ -70,8 +62,6 @@ enum
 
 Cookie          g_cookie;
 
-int             g_offsetList[Offset_Total];
-
 GlobalForward   g_forwardList[Forward_Total];
 
 any             g_convarList[ConVar_Total];
@@ -79,31 +69,6 @@ any             g_convarList[ConVar_Total];
 // =============================== Init ===============================
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    // Load Offset
-    g_offsetList[Offset_m_bIsBleedingOut] = FindSendPropInfo("CNMRiH_Player", "_bleedingOut");
-    if (g_offsetList[Offset_m_bIsBleedingOut] < 1)
-    {
-        SetFailState("Can't find offset CNMRiH_Player::_bleedingOut");
-    }
-
-    g_offsetList[Offset_m_bVaccinated] = FindSendPropInfo("CNMRiH_Player", "_vaccinated");
-    if (g_offsetList[Offset_m_bVaccinated] < 1)
-    {
-        SetFailState("Can't find offset CNMRiH_Player::_vaccinated");
-    }
-
-    g_offsetList[Offset_m_flInfectionTime] = FindSendPropInfo("CNMRiH_Player", "m_flInfectionTime");
-    if (g_offsetList[Offset_m_flInfectionTime] < 1)
-    {
-        SetFailState("Can't find offset CNMRiH_Player::m_flInfectionTime");
-    }
-
-    g_offsetList[Offset_m_flInfectionDeathTime] = FindSendPropInfo("CNMRiH_Player", "m_flInfectionDeathTime");
-    if (g_offsetList[Offset_m_flInfectionDeathTime] < 1)
-    {
-        SetFailState("Can't find offset CNMRiH_Player::m_flInfectionDeathTime");
-    }
-
     // Craete Natives
     CreateNative("NMR_Notice_IsBleedingOut",            Native_NMR_Notice_IsBleedingOut);
     CreateNative("NMR_Notice_IsVaccinated",             Native_NMR_Notice_IsVaccinated);
@@ -144,37 +109,6 @@ public void OnPluginStart()
     g_convarList[ConVar_notice_keycode] = convar.BoolValue;
     CreateConVar("sm_nmrih_notice_version",             PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_SPONLY | FCVAR_DONTRECORD);
     AutoExecConfig(true, PLUGIN_NAME);
-
-    // Load GameData (Detour)
-    GameData gamedata = new GameData("nmrih-notice.games");
-    if (gamedata == null)
-        SetFailState("Couldn't find nmrih-notice.games gamedata.");
-
-    DynamicDetour detour;
-    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::BleedOut");
-    if (detour == null)
-        SetFailState("Failed to find signature CNMRiH_Player::BleedOut");
-    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_BleedOut);
-    delete detour;
-
-    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::StopBleedingOut");
-    if (detour == null)
-        SetFailState("Failed to find signature CNMRiH_Player::StopBleedingOut");
-    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_StopBleedingOut);
-    delete detour;
-
-    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::BecomeInfected");
-    if (detour == null)
-        SetFailState("Failed to find signature CNMRiH_Player::BecomeInfected");
-    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_BecomeInfected);
-    delete detour;
-
-    detour = DynamicDetour.FromConf(gamedata, "CNMRiH_Player::CureInfection");
-    if (detour == null)
-        SetFailState("Failed to find signature CNMRiH_Player::CureInfection");
-    detour.Enable(Hook_Pre, Detour_CNMRiH_Player_CureInfection);
-    delete detour;
-    delete gamedata;
 
     // Hook Events
     if (g_convarList[ConVar_notice_friend_fire])
@@ -238,62 +172,57 @@ void OnConVarChange(ConVar convar, const char[] oldValue, const char[] newValue)
 any Native_NMR_Notice_IsBleedingOut(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
+    if (!IsValidClient(client))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid client (%d).", client);
 
-    return GetEntData(client, g_offsetList[Offset_m_bIsBleedingOut], 1);
+    return NMR_Player(client).IsBleedingOut();
 }
 
 any Native_NMR_Notice_IsVaccinated(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsVaccinated %d is invalid client", client);
+    if (!IsValidClient(client))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid client (%d).", client);
 
-    return GetEntData(client, g_offsetList[Offset_m_bVaccinated], 1);
+    return NMR_Player(client).IsVaccinated();
 }
 
 any Native_NMR_Notice_IsInfected(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
+    if (!IsValidClient(client))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid client (%d).", client);
 
-    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]) != -1.0;
+    return NMR_Player(client).IsInfected();
 }
 
 any Native_NMR_Notice_GetInfectionTime(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsBleedingOut %d is invalid client", client);
+    if (!IsValidClient(client))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid client (%d).", client);
 
-    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionTime]);
+    return NMR_Player(client).m_flInfectionTime;
 }
 
 any Native_NMR_Notice_GetInfectionDeathTime(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
-    if( ! IsValidClient(client) )
-        ThrowError("NMR_Notice_IsInfected %d is invalid client", client);
+    if (!IsValidClient(client))
+        ThrowNativeError(SP_ERROR_PARAM, "Invalid client (%d).", client);
 
-    return GetEntDataFloat(client, g_offsetList[Offset_m_flInfectionDeathTime]);
+    return NMR_Player(client).m_flInfectionDeathTime;
 }
 
-// =============================== Detour ===============================
+// =============================== Forwards ===============================
 // 玩家开始流血
-MRESReturn Detour_CNMRiH_Player_BleedOut(DHookParam params)
+public Action OnPlayerBleedOut(int client)
 {
-    int client = params.Get(0);
-
     Action result;
     Call_StartForward(g_forwardList[Forward_bleedOut]);
     Call_PushCell(client);
     Call_Finish(result);
-    if( result == Plugin_Handled || result == Plugin_Stop )
-        return MRES_Supercede;
-
-    return MRES_Ignored;
+    return result;
 }
 
 // 玩家结束流血
@@ -302,60 +231,38 @@ MRESReturn Detour_CNMRiH_Player_BleedOut(DHookParam params)
 // Note3: 使用 绷带、医疗包 后会连续触发两次
 // Note4: 使用 医疗箱治疗后 只会触发一次
 // Note5: 玩家 撤离后 只会触发一次
-MRESReturn Detour_CNMRiH_Player_StopBleedingOut(DHookParam params)
+public Action OnPlayerStopBleedingOut(int client)
 {
-    int client = params.Get(0);
-
     Action result;
     Call_StartForward(g_forwardList[Forward_stopBleedingOut]);
     Call_PushCell(client);
     Call_Finish(result);
-    if( result == Plugin_Handled || result == Plugin_Stop )
-        return MRES_Supercede;
-
-    return MRES_Ignored;
+    return result;
 }
 
 // 玩家开始感染
 // Note1: 即使已注射疫苗仍会触发此绕行
-MRESReturn Detour_CNMRiH_Player_BecomeInfected(DHookParam params)
+public Action OnPlayerBecomeInfected(int client)
 {
-    int client = params.Get(0);
-
     Action result;
     Call_StartForward(g_forwardList[Forward_becomeInfected]);
     Call_PushCell(client);
     Call_Finish(result);
-    if( result == Plugin_Handled || result == Plugin_Stop )
-        return MRES_Supercede;
-
-    return MRES_Ignored;
+    return result;
 }
 
 // 玩家结束感染
 // Note1: 死亡不会触发
 // Note2: 复活会连续触发两次
 // Note3: 使用 疫苗 后只会触发一次
-MRESReturn Detour_CNMRiH_Player_CureInfection(DHookParam params)
+public Action OnPlayerCureInfection(int client)
 {
-    int client = params.Get(0);
-
     Action result;
     Call_StartForward(g_forwardList[Forward_cureInfection]);
     Call_PushCell(client);
     Call_Finish(result);
-    if( result == Plugin_Handled || result == Plugin_Stop )
-        return MRES_Supercede;
-
-    return MRES_Ignored;
+    return result;
 }
-
-// ================================= Stock =================================
-#if !defined _gremulock_clients_methodmap_included_
-stock bool IsValidClient(int client) {
-    return client > 0 && client <= MaxClients && IsClientInGame(client);
-}
-#endif
 
 // =============================== Notifice ===============================
 // 感染玩家被攻击通知
@@ -472,12 +379,10 @@ void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 }
 
 // 提醒流血
-public Action NMR_Notice_OnPlayerBleedOut(int client)
+public void OnPlayerBleedOutPost(int client)
 {
     if (!g_convarList[ConVar_notice_bleeding])
-    {
-        return Plugin_Continue;
-    }
+        return;
 
     for (int i = 1; i <= MaxClients; ++i)
     {
@@ -488,22 +393,16 @@ public Action NMR_Notice_OnPlayerBleedOut(int client)
 
         CPrintToChat(i, "%t", "Notifice_Bleeding", client);
     }
-
-    return Plugin_Continue;
 }
 
 // 提醒感染
-public Action NMR_Notice_OnPlayerBecomeInfected(int client)
+public void OnPlayerBecomeInfectedPost(int client)
 {
     if (!g_convarList[ConVar_notice_infected])
-    {
-        return Plugin_Continue;
-    }
+        return;
 
-    if (!IsValidClient(client) || NMR_Notice_IsVaccinated(client)) // 保险起见
-    {
-        return Plugin_Continue;
-    }
+    if (!IsValidClient(client) || NMR_Player(client).IsVaccinated()) // 保险起见
+        return;
 
     for (int i = 1; i <= MaxClients; ++i)
     {
@@ -514,8 +413,6 @@ public Action NMR_Notice_OnPlayerBecomeInfected(int client)
 
         CPrintToChat(i, "%t", "Notifice_Infection", client);
     }
-
-    return Plugin_Continue;
 }
 
 // ================================= Client Prefs ==================================
