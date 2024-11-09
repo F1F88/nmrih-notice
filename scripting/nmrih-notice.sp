@@ -9,7 +9,7 @@
 
 #define PLUGIN_NAME                         "nmrih-notice"
 #define PLUGIN_DESCRIPTION                  "Alert the player when something happens in the game"
-#define PLUGIN_VERSION                      "3.0.8"
+#define PLUGIN_VERSION                      "4.0.0"
 
 public Plugin myinfo =
 {
