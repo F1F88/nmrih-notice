@@ -58,8 +58,8 @@
 		"#format"		"{1:N},{2:s}"
 		"chi"			"{green}[SM] {gray}{1}{default} 输入了正确的密码 {green}{2}"
 		"zho"			"{green}[SM] {gray}{1}{default} 輸入了正確的密碼 {green}{2}"
-		"en"			"{greren}[SM] {gray}{1}{default} entered the correct code {green}{2}"
-		"ru"			"{greren}[SM] {gray}{1}{default} вводит правильный код {green}{2}"
+		"en"			"{green}[SM] {gray}{1}{default} entered the correct code {green}{2}"
+		"ru"			"{green}[SM] {gray}{1}{default} вводит правильный код {green}{2}"
 	}
 
 	"Notifice_InputIncorrectCode"
@@ -67,8 +67,8 @@
 		"#format"		"{1:N},{2:s}"
 		"chi"			"{green}[SM] {gray}{1}{default} 输入了错误的密码 {orange}{2}"
 		"zho"			"{green}[SM] {gray}{1}{default} 輸入了錯誤的密碼 {orange}{2}"
-		"en"			"{greren}[SM] {gray}{1}{default} entered the wrong code {orange}{2}"
-		"ru"			"{greren}[SM] {gray}{1}{default} вводит неправильный код {orange}{2}"
+		"en"			"{green}[SM] {gray}{1}{default} entered the wrong code {orange}{2}"
+		"ru"			"{green}[SM] {gray}{1}{default} вводит неправильный код {orange}{2}"
 	}
 
 	"Notifice_PrefsMenu_Title"
