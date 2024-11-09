@@ -39,7 +39,7 @@
 
 ## 依赖
 
-- [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) 或更高版本
+- [SourceMod 1.12](https://www.sourcemod.net/downloads.php?branch=stable) 或更高版本
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
 

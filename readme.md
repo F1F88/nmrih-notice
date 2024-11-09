@@ -40,7 +40,7 @@ Warning: This plugin is no longer supported on windows, you need to update the s
 
 ## Requirements
 
-- [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) or higher
+- [SourceMod 1.12](https://www.sourcemod.net/downloads.php?branch=stable) or higher
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
 
