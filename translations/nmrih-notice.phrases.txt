@@ -3,72 +3,72 @@
 	"Notifice_Bleeding"
 	{
 		"#format"		"{1:N}"
-		"chi"			"{green}[状态] {gray}{1}{default} 流血了"
-		"zho"			"{green}[狀態] {gray}{1}{default} 流血了"
-		"en"			"{green}[Status] {gray}{1}{default} is bleeding."
-		"jp"			"{green}[Status] {gray}{1}{default} さんが出血しています。"
-		"ko"			"{green}[Status] {gray}{1}{default} 님이 출혈 상태 입니다."
-		"ru"			"{green}[Состояние] {gray}{1}{default} истекает кровью."
-        "es"			"{green}[Status] {gray}{1}{default} está sangrando."
-		"da"			"{green}[Status] {gray}{1}{default} bloeder"
+		"chi"			"{green}[SM] {gray}{1}{default} 流血了"
+		"zho"			"{green}[SM] {gray}{1}{default} 流血了"
+		"en"			"{green}[SM] {gray}{1}{default} is bleeding."
+		"jp"			"{green}[SM] {gray}{1}{default} さんが出血しています。"
+		"ko"			"{green}[SM] {gray}{1}{default} 님이 출혈 상태 입니다."
+		"ru"			"{green}[SM] {gray}{1}{default} истекает кровью."
+        "es"			"{green}[SM] {gray}{1}{default} está sangrando."
+		"da"			"{green}[SM] {gray}{1}{default} bloeder"
 	}
 
 	"Notifice_Infection"
 	{
 		"#format"		"{1:N}"
-		"chi"			"{green}[状态] {gray}{1}{default} 感染了"
-		"zho"			"{green}[狀態] {gray}{1}{default} 感染了"
-		"en"			"{green}[Status] {gray}{1}{default} is infected."
-		"jp"			"{green}[Status] {gray}{1}{default} さんが感染しました。"
-		"ko"			"{green}[Status] {gray}{1}{default} 님이 감염 상태 입니다."
-		"ru"			"{green}[Состояние] {gray}{1}{default} заразили."
-		"es"			"{green}[Status] {gray}{1}{default} está infectado"
-		"da"			"{green}[Status] {gray}{1}{default} er inficeret"
+		"chi"			"{green}[SM] {gray}{1}{default} 感染了"
+		"zho"			"{green}[SM] {gray}{1}{default} 感染了"
+		"en"			"{green}[SM] {gray}{1}{default} is infected."
+		"jp"			"{green}[SM] {gray}{1}{default} さんが感染しました。"
+		"ko"			"{green}[SM] {gray}{1}{default} 님이 감염 상태 입니다."
+		"ru"			"{green}[SM] {gray}{1}{default} заразили."
+		"es"			"{green}[SM] {gray}{1}{default} está infectado"
+		"da"			"{green}[SM] {gray}{1}{default} er inficeret"
 	}
 
 
 	"Notifice_Attacked"
 	{
 		"#format"		"{1:N},{2:N}"
-		"chi" 			"{red}[警告] {orange}{1}{default} 攻击了 {gray}{2}"
-		"zho" 			"{red}[警告] {orange}{1}{default} 攻擊了 {gray}{2}"
-		"en" 			"{red}[WARNING] {orange}{1}{default} attacked {gray}{2}"
-		"ru" 			"{red}[ВНИМАНИЕ] {orange}{1}{default} атакует: {gray}{2}"
+		"chi" 			"{red}[SM] {orange}{1}{default} 攻击了 {gray}{2}"
+		"zho" 			"{red}[SM] {orange}{1}{default} 攻擊了 {gray}{2}"
+		"en" 			"{red}[SM] {orange}{1}{default} attacked {gray}{2}"
+		"ru" 			"{red}[SM] {orange}{1}{default} атакует: {gray}{2}"
 	}
 	"Notifice_Kill"
 	{
 		"#format"		"{1:N},{2:N}"
-		"chi" 			"{fullred}[警告] {orange}{1}{red} 击杀了 {gray}{2}"
-		"zho" 			"{fullred}[警告] {orange}{1}{red} 擊殺了 {gray}{2}"
-		"en" 			"{fullred}[WARNING] {orange}{1}{red} killed {gray}{2}"
-		"ru" 			"{fullred}[ВНИМАНИЕ] {orange}{1}{red} убивает: {gray}{2}"
+		"chi" 			"{fullred}[SM] {orange}{1}{red} 击杀了 {gray}{2}"
+		"zho" 			"{fullred}[SM] {orange}{1}{red} 擊殺了 {gray}{2}"
+		"en" 			"{fullred}[SM] {orange}{1}{red} killed {gray}{2}"
+		"ru" 			"{fullred}[SM] {orange}{1}{red} убивает: {gray}{2}"
 	}
 	"Notifice_Vote Kick"
 	{
 		"#format"		"{1:N}"
-		"chi"			"{fullred}[提示]{default} 如果 {orange}{1}{default} 恶意伤害队友, 你可以投票踢出他, 或联系管理员封禁"
-		"zho"			"{fullred}[提示]{default} 如果 {orange}{1}{default} 惡意傷害隊友, 你可以投票踢出他, 或聯系管理員封禁"
-		"en"			"{fullred}[Tips]{default} If {orange}{1}{default} harms a teammate maliciously, you can vote to kick him out. Or contact the administrator"
-		"ru"			"{fullred}[Совет]{default} Если {orange}{1}{default} причиняет вред союзникам, можно проголосовать за изгнание. Или свяжитесь с администратором"
+		"chi"			"{fullred}[SM]{default} 如果 {orange}{1}{default} 恶意伤害队友, 你可以投票踢出他, 或联系管理员封禁"
+		"zho"			"{fullred}[SM]{default} 如果 {orange}{1}{default} 惡意傷害隊友, 你可以投票踢出他, 或聯系管理員封禁"
+		"en"			"{fullred}[SM]{default} If {orange}{1}{default} harms a teammate maliciously, you can vote to kick him out. Or contact the administrator"
+		"ru"			"{fullred}[SM]{default} Если {orange}{1}{default} причиняет вред союзникам, можно проголосовать за изгнание. Или свяжитесь с администратором"
 	}
 
 
 	"Notifice_InputCorrectCode"
 	{
 		"#format"		"{1:N},{2:s}"
-		"chi"			"{green}[密码] {gray}{1}{default} 输入了正确的密码 {green}{2}"
-		"zho"			"{green}[密码] {gray}{1}{default} 輸入了正確的密碼 {green}{2}"
-		"en"			"{greren}[PASSWORD] {gray}{1}{default} entered the correct code {green}{2}"
-		"ru"			"{greren}[ПАРОЛЬ] {gray}{1}{default} вводит правильный код {green}{2}"
+		"chi"			"{green}[SM] {gray}{1}{default} 输入了正确的密码 {green}{2}"
+		"zho"			"{green}[SM] {gray}{1}{default} 輸入了正確的密碼 {green}{2}"
+		"en"			"{green}[SM] {gray}{1}{default} entered the correct code {green}{2}"
+		"ru"			"{green}[SM] {gray}{1}{default} вводит правильный код {green}{2}"
 	}
 
 	"Notifice_InputIncorrectCode"
 	{
 		"#format"		"{1:N},{2:s}"
-		"chi"			"{green}[密码] {gray}{1}{default} 输入了错误的密码 {orange}{2}"
-		"zho"			"{green}[密码] {gray}{1}{default} 輸入了錯誤的密碼 {orange}{2}"
-		"en"			"{greren}[PASSWORD] {gray}{1}{default} entered the wrong code {orange}{2}"
-		"ru"			"{greren}[ПАРОЛЬ] {gray}{1}{default} вводит неправильный код {orange}{2}"
+		"chi"			"{green}[SM] {gray}{1}{default} 输入了错误的密码 {orange}{2}"
+		"zho"			"{green}[SM] {gray}{1}{default} 輸入了錯誤的密碼 {orange}{2}"
+		"en"			"{green}[SM] {gray}{1}{default} entered the wrong code {orange}{2}"
+		"ru"			"{green}[SM] {gray}{1}{default} вводит неправильный код {orange}{2}"
 	}
 
 	"Notifice_PrefsMenu_Title"
