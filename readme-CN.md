@@ -43,6 +43,8 @@
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
 
+- [nmrih-player](https://github.com/F1F88/sm-nmrih-player) v1.11.0 or higher
+
 - 插件 clientprefs.smx（可选）
 
 ## 使用方法
