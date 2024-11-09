@@ -106,7 +106,6 @@ public void OnPluginStart()
         HookUserMessage(GetUserMessageId("BecameInfected"), UserMsg_BecameInfected);
     }
 
-    if (g_CVars[CVar_ff])
     if (FindConVar("sm_notice_ff").BoolValue)
     {
         HookEvent("player_hurt", Event_PlayerHurt);
@@ -306,9 +305,6 @@ void Frame_NotificePlayerBecameInfected(int userid)
 // 受伤 - 友军攻击通知
 void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
-    if (!g_CVars[CVar_ff])
-        return;
-
     int victim = GetClientOfUserId(event.GetInt("userid"));
     int attacker = GetClientOfUserId(event.GetInt("attacker"));
     if (attacker == victim || !IsValidClient(attacker) || !IsValidClient(victim))
@@ -334,9 +330,6 @@ void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 // 死亡 - 友军击杀通知
 void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-    if (!g_CVars[CVar_fk])
-        return;
-
     int npc = event.GetInt("npctype");
     if (npc != 0)
         return;
@@ -363,9 +356,6 @@ void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 // 显示输入的密码
 void Event_Keycode_Enter(Event event, char[] Ename, bool dontBroadcast)
 {
-    if (!g_CVars[CVar_keycode])
-        return;
-
     char enterCode[16], correctCode[16];
     int client = event.GetInt("player");
     int keypad = event.GetInt("keypad_idx");
