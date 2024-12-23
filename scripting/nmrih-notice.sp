@@ -271,10 +271,6 @@ public void OnPlayerBleedOutPost(int client)
     if (!g_CVars[CVar_bleeding])
         return;
 
-    // 指令 bleedout 会重复触发此回调
-    if (NMR_Player(client)._bleedingOut)
-        return;
-
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (IsClientInGame(i) && CheckPrefsBit(i, BIT_SHOW_BLEEDING))
